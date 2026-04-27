@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIPET SHOP</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@700;800&display=swap"
+        rel="stylesheet">
+    <!-- Meta Pixel Code -->
+    <script>
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1466015285305195');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+            src="https://www.facebook.com/tr?id=1466015285305195&ev=PageView&noscript=1" /></noscript>
+    <!-- End Meta Pixel Code -->
+    <style>
+        :root {
+            --primary: #ff2d55;
+            --primary-dark: #c4002b;
+            --accent: #00c853;
+            --accent2: #ff6d00;
+            --bg: #f7f7f7;
+            --white: #ffffff;
+            --dark: #1a1a1a;
+            --gray: #666;
+            --light: #efefef;
+            --card: #ffffff;
+            --teal: #00b3a6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            color: var(--dark);
+        }
+
+        /* TOP NAV */
+        .topnav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
+            gap: 10px;
+        }
+
+        .topnav .logo {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.3rem;
+            color: var(--primary);
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .topnav .search {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: var(--light);
+            border-radius: 20px;
+            padding: 6px 12px;
+            gap: 6px;
+        }
+
+        .topnav .search input {
+            border: none;
+            background: transparent;
+            font-size: .9rem;
+            width: 100%;
+            outline: none;
+        }
+
+        .topnav .cart-btn {
+            position: relative;
+            background: var(--primary);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .topnav .cart-btn svg {
+            fill: white;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--accent2);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: .65rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* MAIN */
+        .main {
+            max-width: 480px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+
+        /* GALLERY */
+        .gallery {
+            position: relative;
+            background: #fff;
+        }
+
+        .gallery-main {
+            width: 100%;
+            height: 420px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-main img {
+            width: 100%;
+            height: 420px;
+            object-fit: contain;
+            background: #fff;
+            display: none;
+            animation: fadeIn .3s;
+        }
+
+        .gallery-main img.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .gallery-thumbs {
+            display: flex;
+            gap: 6px;
+            padding: 8px 10px;
+            overflow-x: auto;
+            background: #fff;
+        }
+
+        .gallery-thumbs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .gallery-thumbs img {
+            width: 68px;
+            height: 68px;
+            object-fit: contain;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: border-color .2s;
+        }
+
+        .gallery-thumbs img.active {
+            border-color: var(--primary);
+        }
+
+        .scroll-dots {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+        }
+
+        .scroll-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .5);
+            transition: background .2s;
+        }
+
+        .scroll-dot.active {
+            background: white;
+            width: 18px;
+            border-radius: 3px;
+        }
+
+        /* PRODUCT INFO */
+        .prod-info {
+            background: white;
+            padding: 14px;
+            margin-top: 8px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .prod-price {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+
+        .price-main {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        .price-old {
+            font-size: .95rem;
+            color: #aaa;
+            text-decoration: line-through;
+        }
+
+        .price-discount {
+            background: var(--primary);
+            color: white;
+            font-size: .72rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 4px;
+        }
+
+        .prod-name {
+            font-size: 1.05rem;
+            font-weight: 800;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .prod-sub {
+            font-size: .82rem;
+            color: var(--gray);
+            margin-top: 3px;
+        }
+
+        .prod-stats {
+            display: flex;
+            gap: 14px;
+            margin-top: 10px;
+            font-size: .82rem;
+            color: var(--gray);
+            align-items: center;
+        }
+
+        .stars {
+            color: #f5a623;
+            font-size: .95rem;
+            letter-spacing: 1px;
+        }
+
+        .sold-tag {
+            background: var(--light);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: .75rem;
+            font-weight: 700;
+        }
+
+        .highlights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .hl {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0fff4;
+            border: 1px solid #b2dfdb;
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #00796b;
+        }
+
+        .hl svg {
+            fill: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: #fff3e0;
+            color: var(--accent2);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+
+        /* VARIANTS */
+        .variant-section {
+            margin-top: 12px;
+        }
+
+        .variant-label {
+            font-size: .85rem;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .variant-label span.selected-variant {
+            color: var(--primary);
+            font-weight: 900;
+        }
+
+        .variant-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .variant-btn {
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 10px;
+            padding: 8px 18px;
+            font-size: .88rem;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            color: #444;
+            transition: all .2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 80px;
+        }
+
+        .variant-btn .v-weight {
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .variant-btn .v-price {
+            font-size: .72rem;
+            color: #999;
+        }
+
+        .variant-btn.active {
+            border-color: var(--primary);
+            background: #fff0f3;
+            color: var(--primary);
+        }
+
+        .variant-btn.active .v-price {
+            color: var(--primary);
+        }
+
+        .variant-btn:hover:not(.active) {
+            border-color: #bbb;
+            background: #f9f9f9;
+        }
+
+        .v-gift {
+            font-size: .62rem;
+            color: #00796b;
+            font-weight: 700;
+            background: #e8f5e9;
+            border-radius: 6px;
+            padding: 1px 5px;
+            margin-top: 1px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .variant-btn.active .v-gift {
+            background: #fff0f3;
+            color: var(--primary);
+        }
+
+        /* FLASH SALE */
+        .flash-sale-banner {
+            background: linear-gradient(90deg, #ff2d55, #ff6b35);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(255, 45, 85, .35);
+            animation: flashPulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes flashPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 14px rgba(255, 45, 85, .35)
+            }
+
+            50% {
+                box-shadow: 0 4px 24px rgba(255, 45, 85, .6)
+            }
+        }
+
+        .flash-sale-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .flash-sale-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1rem;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            letter-spacing: .3px;
+        }
+
+        .flash-bolt {
+            display: inline-block;
+            animation: boltBlink .7s steps(1) infinite;
+        }
+
+        @keyframes boltBlink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .3
+            }
+        }
+
+        .flash-sale-sub {
+            font-size: .72rem;
+            color: rgba(255, 255, 255, .85);
+            font-weight: 600;
+        }
+
+        .flash-sale-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .flash-ends-label {
+            font-size: .65rem;
+            color: rgba(255, 255, 255, .8);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .flash-countdown {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .cd-block {
+            background: rgba(0, 0, 0, .3);
+            border-radius: 6px;
+            padding: 4px 7px;
+            min-width: 34px;
+            text-align: center;
+        }
+
+        .cd-num {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1;
+            display: block;
+        }
+
+        .cd-sep {
+            color: white;
+            font-weight: 900;
+            font-size: 1rem;
+            margin-top: -4px;
+        }
+
+        .flash-sold-bar {
+            margin-top: 8px;
+        }
+
+        .flash-sold-label {
+            font-size: .72rem;
+            color: rgba(255, 255, 255, .9);
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .flash-bar-track {
+            background: rgba(0, 0, 0, .2);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .flash-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fff176, #ffca28);
+            border-radius: 10px;
+            width: 72%;
+        }
+
+        .flash-expired {
+            text-align: center;
+            background: #eee;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: .85rem;
+            color: #999;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        /* SECTION */
+        .section {
+            background: white;
+            margin-top: 8px;
+            padding: 14px;
+            border-radius: 8px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* DESCRIPTION IMAGES */
+        .desc-img-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .desc-img-grid img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 10px;
+            border: 1px solid #eee;
+            cursor: pointer;
+            transition: box-shadow .2s;
+        }
+
+        .desc-img-grid img:hover {
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+        }
+
+        /* REVIEWS */
+        .review-summary {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .review-big {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .review-bars {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .rbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .72rem;
+            color: var(--gray);
+        }
+
+        .rbar-track {
+            flex: 1;
+            background: var(--light);
+            border-radius: 4px;
+            height: 7px;
+            overflow: hidden;
+        }
+
+        .rbar-fill {
+            height: 100%;
+            background: #f5a623;
+            border-radius: 4px;
+        }
+
+        .review-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .review-card {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .rc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rc-name {
+            font-weight: 800;
+            font-size: .88rem;
+        }
+
+        .rc-date {
+            font-size: .72rem;
+            color: #aaa;
+        }
+
+        .rc-stars {
+            color: #f5a623;
+            font-size: .82rem;
+            margin: 3px 0;
+        }
+
+        .rc-text {
+            font-size: .83rem;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        .rc-verified {
+            font-size: .7rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .rc-images {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .rc-images img {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            cursor: pointer;
+            transition: transform .2s;
+        }
+
+        .rc-images img:hover {
+            transform: scale(1.05);
+        }
+
+        /* RELATED */
+        .related-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .rel-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .09);
+            cursor: pointer;
+            transition: transform .15s, box-shadow .15s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rel-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .13);
+        }
+
+        .rel-card-img-wrap {
+            position: relative;
+            background: #fff5ee;
+            width: 100%;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+        }
+
+        .rel-card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .rel-card-badge {
+            position: absolute;
+            top: 7px;
+            left: 7px;
+            background: var(--primary);
+            color: white;
+            font-size: .6rem;
+            font-weight: 800;
+            border-radius: 4px;
+            padding: 2px 6px;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+
+        .rel-card-voucher {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #ff6d00cc, #ff2d55cc);
+            color: white;
+            font-size: .63rem;
+            font-weight: 800;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rel-card-body {
+            padding: 8px 10px 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .rel-card-name {
+            font-size: .78rem;
+            font-weight: 700;
+            line-height: 1.35;
+            color: #222;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .rel-card-prices {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+            margin-top: 2px;
+        }
+
+        .rel-card-price {
+            color: var(--primary);
+            font-weight: 900;
+            font-size: .95rem;
+        }
+
+        .rel-card-old {
+            font-size: .7rem;
+            color: #bbb;
+            text-decoration: line-through;
+        }
+
+        .rel-card-sold {
+            font-size: .68rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* BOTTOM BAR — chỉ còn 1 nút MUA NGAY full width + nhấp nháy */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            padding: 10px 14px;
+            box-shadow: 0 -3px 12px rgba(0, 0, 0, .12);
+            z-index: 99;
+        }
+
+        .btn-buy {
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), #ff6b35);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            box-shadow: 0 4px 14px rgba(255, 45, 85, .4);
+            animation: buyPulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes buyPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 4px 14px rgba(255, 45, 85, .4);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 6px 28px rgba(255, 45, 85, .7);
+                transform: scale(1.025);
+            }
+        }
+
+        .btn-buy:hover {
+            opacity: .9;
+        }
+
+        /* CART DRAWER */
+        .cart-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 200;
+        }
+
+        .cart-overlay.open {
+            display: block;
+        }
+
+        .cart-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 16px;
+            z-index: 201;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp .3s;
+            display: none;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translate(-50%, 100%)
+            }
+
+            to {
+                transform: translate(-50%, 0)
+            }
+        }
+
+        .drawer-title {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .cart-item img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .ci-info {
+            flex: 1;
+        }
+
+        .ci-name {
+            font-size: .85rem;
+            font-weight: 700;
+        }
+
+        .ci-price {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: .9rem;
+        }
+
+        .ci-qty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .qty-btn {
+            background: var(--light);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-num {
+            font-weight: 800;
+            font-size: .88rem;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .cart-total span:last-child {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), #ff6b35);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 30px;
+            color: #aaa;
+            font-size: .9rem;
+        }
+
+        /* ORDER DRAWER */
+        .order-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 16px;
+            z-index: 201;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp .3s;
+            display: none;
+        }
+
+        .order-drawer.open {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: .82rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #444;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            border: 1.5px solid #ddd;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: .9rem;
+            font-family: 'Nunito', sans-serif;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .form-group textarea {
+            resize: none;
+            height: 72px;
+        }
+
+        .order-summary {
+            background: #fff5f6;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+        }
+
+        .os-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: .85rem;
+            margin-bottom: 4px;
+        }
+
+        .os-row.total {
+            font-weight: 900;
+            font-size: 1rem;
+            color: var(--primary);
+            border-top: 1px dashed #ffc;
+            padding-top: 6px;
+            margin-top: 6px;
+        }
+
+        .btn-order {
+            width: 100%;
+            background: linear-gradient(90deg, var(--primary), #ff6b35);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .success-msg {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .success-msg .check-icon {
+            font-size: 3rem;
+        }
+
+        .success-msg h3 {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin: 8px 0 4px;
+        }
+
+        .success-msg p {
+            font-size: .85rem;
+            color: #666;
+        }
+
+        /* FOOTER */
+        .site-footer {
+            background: #1a1a2e;
+            color: #ccc;
+            padding: 28px 16px 20px;
+            margin-top: 8px;
+        }
+
+        .footer-logo {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .footer-tagline {
+            font-size: .8rem;
+            color: #aaa;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .footer-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, .08);
+            margin: 16px 0;
+        }
+
+        .footer-section-title {
+            font-size: .78rem;
+            font-weight: 800;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 10px;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .footer-links li a {
+            text-decoration: none;
+            color: #aaa;
+            font-size: .8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color .2s;
+        }
+
+        .footer-links li a:hover {
+            color: var(--primary);
+        }
+
+        .footer-contact-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .8rem;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+
+        .footer-contact-row .icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 45, 85, .15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .9rem;
+            flex-shrink: 0;
+        }
+
+        .footer-contact-row a {
+            color: #ccc;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .footer-contact-row a:hover {
+            color: var(--primary);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+            margin-bottom: 16px;
+        }
+
+        .footer-social a {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .07);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: background .2s, transform .2s;
+        }
+
+        .footer-social a:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .footer-trust {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .trust-badge {
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: .7rem;
+            color: #bbb;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            font-size: .7rem;
+            color: #555;
+            line-height: 1.6;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, .06);
+        }
+
+        .footer-bottom a {
+            color: #777;
+            text-decoration: none;
+        }
+
+        .footer-bottom a:hover {
+            color: var(--primary);
+        }
+
+        /* FAKE NOTIF */
+        #buyer-notif {
+            position: fixed;
+            bottom: 90px;
+            left: 12px;
+            z-index: 9999;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
+            padding: 10px 14px 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 290px;
+            min-width: 220px;
+            transform: translateX(-120%);
+            transition: transform .45s cubic-bezier(.34, 1.56, .64, 1);
+            border-left: 4px solid #ff2d55;
+        }
+
+        #buyer-notif.show {
+            transform: translateX(0);
+        }
+
+        .bn-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff2d55, #ff6d00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .bn-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .bn-name {
+            font-weight: 800;
+            font-size: .82rem;
+            color: #1a1a1a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bn-action {
+            font-size: .75rem;
+            color: #666;
+            margin-top: 1px;
+        }
+
+        .bn-action span {
+            color: #ff2d55;
+            font-weight: 700;
+        }
+
+        .bn-time {
+            font-size: .68rem;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        .bn-close {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            font-size: .7rem;
+            color: #bbb;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px 4px;
+        }
+
+        .bn-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00c853;
+            animation: bnPulse 1.2s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes bnPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .5;
+                transform: scale(1.4)
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP NAV -->
+    <div class="topnav">
+        <div class="logo">🛒 TIPET SHOP VN</div>
+        <div class="search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2.5">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input type="text" placeholder="Tìm sản phẩm...">
+        </div>
+        <button class="cart-btn" onclick="openCart()">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" stroke="white" stroke-width="2" />
+                <path d="M16 10a4 4 0 01-8 0" stroke="white" stroke-width="2" fill="none" />
+            </svg>
+            <span class="cart-count" id="cartCount">0</span>
+        </button>
+    </div>
+
+    <div class="main">
+
+        <!-- GALLERY -->
+        <div class="gallery">
+            <div class="gallery-main" id="mainImgs">
+                <img src="./img/1.jpeg" class="active" alt="1">
+                <img src="./img/2.jpeg" alt="2">
+                <img src="./img/3.jpeg" alt="3">
+                <img src="./img/4.jpeg" alt="4">
+                <img src="./img/5.jpeg" alt="5">
+                <img src="./img/6.jpeg" alt="6">
+                <img src="./img/7.jpeg" alt="7">
+            </div>
+            <div class="scroll-dots" id="scrollDots">
+                <div class="scroll-dot active"></div>
+                <div class="scroll-dot"></div>
+                <div class="scroll-dot"></div>
+                <div class="scroll-dot"></div>
+                <div class="scroll-dot"></div>
+                <div class="scroll-dot"></div>
+                <div class="scroll-dot"></div>
+            </div>
+            <div class="gallery-thumbs" id="thumbRow">
+                <img src="./img/1.jpeg" class="active" onclick="setImg(0)">
+                <img src="./img/2.jpeg" onclick="setImg(1)">
+                <img src="./img/3.jpeg" onclick="setImg(2)">
+                <img src="./img/4.jpeg" onclick="setImg(3)">
+                <img src="./img/5.jpeg" onclick="setImg(4)">
+                <img src="./img/6.jpeg" onclick="setImg(5)">
+                <img src="./img/7.jpeg" onclick="setImg(6)">
+            </div>
+        </div>
+
+        <!-- PRODUCT INFO -->
+        <div class="prod-info">
+            <div class="flash-sale-banner" id="flashSaleBanner">
+                <div style="flex:1">
+                    <div class="flash-sale-left">
+                        <div class="flash-sale-title"><span class="flash-bolt">⚡</span> FLASH SALE</div>
+                        <div class="flash-sale-sub">Giảm thêm 20% — Chỉ hôm nay!</div>
+                    </div>
+                    <div class="flash-sold-bar">
+                        <div class="flash-sold-label"><span>🔥 Đã bán 72%</span><span>Còn 28 suất</span></div>
+                        <div class="flash-bar-track">
+                            <div class="flash-bar-fill"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flash-sale-right">
+                    <div class="flash-ends-label">Kết thúc sau</div>
+                    <div class="flash-countdown">
+                        <div class="cd-block"><span class="cd-num" id="cdMin">15</span></div>
+                        <span class="cd-sep">:</span>
+                        <div class="cd-block"><span class="cd-num" id="cdSec">00</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prod-price">
+                <span class="price-main" id="priceMain">199.000₫</span>
+                <span class="price-old" id="priceOld">349.000₫</span>
+                <span class="price-discount" id="priceDiscount">-43%</span>
+            </div>
+            <div class="prod-name">🌿 Xịt Diệt Ve Rận Bọ Chét Cho Chó Mèo – Xua Đuổi Kiến, Muỗi, Gián – Thành Phần Thảo
+                Mộc An Toàn</div>
+            <div class="prod-sub">Chuyên dụng cho chó mèo — Chai 300ML</div>
+            <div class="prod-stats">
+                <span class="stars">★★★★★</span>
+                <span>4.9 (19.2k đánh giá)</span>
+                <span class="sold-tag">🔥 30.4k đã bán</span>
+            </div>
+            <div class="highlights">
+                <div class="hl"><svg width="12" height="12" viewBox="0 0 24 24">
+                        <path d="M20 6L9 17l-5-5" />
+                    </svg>Xua đuổi ve rận, bọ chét</div>
+                <div class="hl"><svg width="12" height="12" viewBox="0 0 24 24">
+                        <path d="M20 6L9 17l-5-5" />
+                    </svg>Xua đuổi kiến, muỗi, gián</div>
+                <div class="hl"><svg width="12" height="12" viewBox="0 0 24 24">
+                        <path d="M20 6L9 17l-5-5" />
+                    </svg>Mùi thơm thảo dược dễ chịu</div>
+                <div class="hl"><svg width="12" height="12" viewBox="0 0 24 24">
+                        <path d="M20 6L9 17l-5-5" />
+                    </svg>An toàn cho con người và thú cưng</div>
+            </div>
+            <div class="tag-row">
+                <span class="tag">Hoàn tiền 7 ngày 💰</span>
+                <span class="tag">Hàng chính hãng nhà Tipet ✅</span>
+                <span class="tag">Giao hỏa tốc nội thành trong 2h ⚡</span>
+            </div>
+            <div class="variant-section">
+                <div class="variant-label">⚖️ Phân loại: <span class="selected-variant" id="selectedVariantLabel">1 Lọ —
+                        199.000₫</span></div>
+                <div class="variant-options">
+                    <button class="variant-btn active" onclick="selectVariant(this,'1lo')">
+                        <span class="v-weight">1 Lọ</span><span class="v-price">199.000₫</span><span class="v-gift">🚚
+                            +20k ship</span>
+                    </button>
+                    <button class="variant-btn" onclick="selectVariant(this,'2lo')">
+                        <span class="v-weight">2 Lọ</span><span class="v-price">369.000₫</span><span class="v-gift">🎁
+                            Tặng lược chải</span>
+                    </button>
+                    <button class="variant-btn" onclick="selectVariant(this,'3lo')">
+                        <span class="v-weight">3 Lọ</span><span class="v-price">499.000₫</span><span class="v-gift">🎁
+                            Tặng sữa tắm</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DESCRIPTION IMAGES -->
+        <div class="section">
+            <div class="section-title">THÔNG TIN SẢN PHẨM</div>
+            <div class="desc-img-grid">
+                <img src="./img/2.jpeg" alt="SP 1"
+                    onerror="this.src='https://placehold.co/480x480/f0fff4/00c853?text=🌿'" onclick="setImg(1)">
+                <img src="./img/rận.jpeg" alt="SP 2"
+                    onerror="this.src='https://placehold.co/480x480/fff5ee/ff6b35?text=🌿'">
+                <img src="./img/bọ chét.jpeg" alt="SP 3"
+                    onerror="this.src='https://placehold.co/480x480/f0f4ff/5b6af5?text=🐾'">
+                <img src="./img/muỗi.jpeg" alt="SP 4"
+                    onerror="this.src='https://placehold.co/480x480/fff3e0/ff6d00?text=🐶'">
+                <img src="./img/gián.jpeg" alt="SP 5"
+                    onerror="this.src='https://placehold.co/480x480/fff0f3/ff2d55?text=🌿'">
+                <img src="./img/4.jpeg" alt="SP 6"
+                    onerror="this.src='https://placehold.co/480x480/f5fff0/00c853?text=✅'" onclick="setImg(3)">
+                <img src="./img/7.jpeg" alt="SP 7"
+                    onerror="this.src='https://placehold.co/480x480/fce4ec/ff2d55?text=🐱'" onclick="setImg(6)">
+            </div>
+        </div>
+
+        <!-- REVIEWS -->
+        <div class="section">
+            <div class="section-title">Đánh giá khách hàng</div>
+            <div class="review-summary">
+                <div>
+                    <div class="review-big">4.9</div>
+                    <div class="stars">★★★★★</div>
+                    <div style="font-size:.72rem;color:#aaa;text-align:center">19.2k đánh giá</div>
+                </div>
+                <div class="review-bars">
+                    <div class="rbar"><span>5★</span>
+                        <div class="rbar-track">
+                            <div class="rbar-fill" style="width:95%"></div>
+                        </div><span>95%</span>
+                    </div>
+                    <div class="rbar"><span>4★</span>
+                        <div class="rbar-track">
+                            <div class="rbar-fill" style="width:5%;background:#a5d6a7"></div>
+                        </div><span>5%</span>
+                    </div>
+                    <div class="rbar"><span>3★</span>
+                        <div class="rbar-track">
+                            <div class="rbar-fill" style="width:0%"></div>
+                        </div><span>0%</span>
+                    </div>
+                    <div class="rbar"><span>2★</span>
+                        <div class="rbar-track">
+                            <div class="rbar-fill" style="width:0%"></div>
+                        </div><span>0%</span>
+                    </div>
+                    <div class="rbar"><span>1★</span>
+                        <div class="rbar-track">
+                            <div class="rbar-fill" style="width:0%"></div>
+                        </div><span>0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="review-cards">
+                <div class="review-card">
+                    <div class="rc-header"><span class="rc-name">Nguyễn Thị Lan</span><span class="rc-date"
+                            id="rc-date"></span></div>
+                    <div class="rc-stars">★★★★★</div>
+                    <div class="rc-text">Xịt xong thấy bọ chét giảm hẳn, mèo không còn gãi liên tục nữa. Mùi thơm nhẹ,
+                        không hắc. Chai xịt mịn, dễ dùng. 5⭐ cho shop nhé!</div>
+                    <div class="rc-images">
+                        <img src="./img/fb4.jpg" onerror="this.src='https://placehold.co/72x72/fff5ee/ff6b35?text=🐱'">
+                        <img src="./img/fb 41.jpg"
+                            onerror="this.src='https://placehold.co/72x72/f0fff4/00c853?text=🐾'">
+                    </div>
+                    <div class="rc-verified">✔ Đã mua hàng</div>
+                </div>
+                <div class="review-card">
+                    <div class="rc-header"><span class="rc-name">Trần Văn Minh</span><span class="rc-date"
+                            id="rc-date1"></span></div>
+                    <div class="rc-stars">★★★★★</div>
+                    <div class="rc-text">Mua combo 3 lọ được tặng thêm chai sữa tắm, hàng chất lượng thật sự. Chó nhà
+                        mình bị ve rận khá nhiều, xịt vào sau 2 ngày thấy ve rụng hết. Mùi thơm thoang thoảng, không khó
+                        chịu. Sẽ mua lại!</div>
+                    <div class="rc-images">
+                        <img src="./img/fb3.jpg" onerror="this.src='https://placehold.co/72x72/fff5ee/ff6b35?text=🐶'">
+                        <img src="./img/fb5.jpg" onerror="this.src='https://placehold.co/72x72/f0f4ff/5b6af5?text=🐈'">
+                    </div>
+                    <div class="rc-verified">✔ Đã mua hàng</div>
+                </div>
+                <div class="review-card">
+                    <div class="rc-header"><span class="rc-name">Phạm Hồng Nhung</span><span class="rc-date"
+                            id="rc-date2"></span></div>
+                    <div class="rc-stars">★★★★★</div>
+                    <div class="rc-text">Giao hàng nhanh, đóng gói cẩn thận. Mèo nhà mình hay bị bọ chét, dùng xong thấy
+                        hiệu quả rõ ràng. Thành phần thảo mộc nên an tâm cho bé dùng.</div>
+                    <div class="rc-images">
+                        <img src="./img/fb6.jpg" onerror="this.src='https://placehold.co/72x72/fff5ee/ff6b35?text=🐱'">
+                        <img src="./img/fb7.jpg" onerror="this.src='https://placehold.co/72x72/f0fff4/00c853?text=🐾'">
+                    </div>
+                    <div class="rc-verified">✔ Đã mua hàng</div>
+                </div>
+                <div class="review-card">
+                    <div class="rc-header"><span class="rc-name">Hà Vi</span><span class="rc-date" id="rc-date3"></span>
+                    </div>
+                    <div class="rc-stars">★★★★★</div>
+                    <div class="rc-text">Mua 2 lọ được tặng lược chải ve rận rất tiện. Xịt xong chải nhẹ, ve và bọ chét
+                        rụng ra nhiều lắm. Hàng thật, chất lượng tốt. Cảm ơn shop!</div>
+                    <div class="rc-images">
+                        <img src="./img/fb8.jpg" onerror="this.src='https://placehold.co/72x72/fff5ee/ff6b35?text=🐱'">
+                    </div>
+                    <div class="rc-verified">✔ Đã mua hàng</div>
+                </div>
+                <div class="review-card">
+                    <div class="rc-header"><span class="rc-name">Hương Giang</span><span class="rc-date"
+                            id="rc-date4"></span></div>
+                    <div class="rc-stars">★★★★★</div>
+                    <div class="rc-text">Hàng giao nhanh lắm, đúng như mô tả. Xịt vào thấy mùi thơm thảo dược dễ chịu,
+                        không lo độc hại cho bé. Sẽ ủng hộ shop dài dài!</div>
+                    <div class="rc-images">
+                        <img src="./img/fb9.jpg" onerror="this.src='https://placehold.co/72x72/fff5ee/ff6b35?text=🐱'">
+                    </div>
+                    <div class="rc-verified">✔ Đã mua hàng</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RELATED -->
+        <div class="section">
+            <div class="section-title">Sản phẩm khác</div>
+            <div class="related-grid">
+                <div class="rel-card" onclick="addRelated('Súp Thưởng Mèo Gemluck 15g',1000,'./img/gemluck.webp')">
+                    <div class="rel-card-img-wrap">
+                        <img src="./img/gemluck.webp"
+                            onerror="this.src='https://placehold.co/300x300/fff5ee/ff6b35?text=🐱'" alt="">
+                        <div class="rel-card-badge">HOT</div>
+                        <div class="rel-card-voucher">🎁 Tặng voucher giảm 15K</div>
+                    </div>
+                    <div class="rel-card-body">
+                        <div class="rel-card-name">🐟 Súp Thưởng Cho Mèo Gemluck 15G</div>
+                        <div class="rel-card-prices"><span class="rel-card-price">1.000₫</span><span
+                                class="rel-card-old">5.000₫</span></div>
+                        <div class="rel-card-sold">⭐ 4.9 · 90k đã bán</div>
+                    </div>
+                </div>
+                <div class="rel-card" onclick="addRelated('Bàn Cào Móng Tròn Cho Mèo',39000,'./img/BÀN CÀO- bìa.png')">
+                    <div class="rel-card-img-wrap">
+                        <img src="./img/BÀN CÀO- bìa.png"
+                            onerror="this.src='https://placehold.co/300x300/f0f8ff/4a90d9?text=🐾'" alt="">
+                        <div class="rel-card-badge">MỚI</div>
+                        <div class="rel-card-voucher">🎁 Tặng voucher giảm 15K</div>
+                    </div>
+                    <div class="rel-card-body">
+                        <div class="rel-card-name">🐾 Bàn Cào Móng Tròn Cho Mèo Xả Stress 2026</div>
+                        <div class="rel-card-prices"><span class="rel-card-price">39.000₫</span><span
+                                class="rel-card-old">89.000₫</span></div>
+                        <div class="rel-card-sold">⭐ 4.9 · 6.7k đã bán</div>
+                    </div>
+                </div>
+                <div class="rel-card"
+                    onclick="addRelated('Hạt KawaiCat Túi 1,5Kg Hương Vị Cá Hồi',159000,'./img/LONG CAT- bìa (1).png')">
+                    <div class="rel-card-img-wrap">
+                        <img src="./img/LONG CAT- bìa (1).png"
+                            onerror="this.src='https://placehold.co/300x300/fff0f5/ff2d55?text=🐱'" alt="">
+                        <div class="rel-card-badge">BÁN CHẠY</div>
+                        <div class="rel-card-voucher">🎁 Tặng voucher giảm 15K</div>
+                    </div>
+                    <div class="rel-card-body">
+                        <div class="rel-card-name">🐠 Hạt KawaiCat Túi 1,5Kg Hương Vị Cá Hồi</div>
+                        <div class="rel-card-prices"><span class="rel-card-price">159.000₫</span><span
+                                class="rel-card-old">299.000₫</span></div>
+                        <div class="rel-card-sold">⭐ 4.9 · 20.1k đã bán</div>
+                    </div>
+                </div>
+                <div class="rel-card"
+                    onclick="addRelated('Bàn Cào Móng Ova Cho Mèo',39000,'./img/BÀN CÀO ova- bìa.png')">
+                    <div class="rel-card-img-wrap">
+                        <img src="./img/BÀN CÀO ova- bìa.png"
+                            onerror="this.src='https://placehold.co/300x300/f5fff0/00c853?text=🐾'" alt="">
+                        <div class="rel-card-badge">MỚI</div>
+                        <div class="rel-card-voucher">🎁 Tặng voucher giảm 15K</div>
+                    </div>
+                    <div class="rel-card-body">
+                        <div class="rel-card-name">🐾 Bàn Cào Móng Ova Cho Mèo Xả Stress 2026</div>
+                        <div class="rel-card-prices"><span class="rel-card-price">39.000₫</span><span
+                                class="rel-card-old">79.000₫</span></div>
+                        <div class="rel-card-sold">⭐ 4.8 · 11.5k đã bán</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end .main -->
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div style="max-width:480px;margin:0 auto;">
+            <div class="footer-logo">🛒 TIPET SHOP VN</div>
+            <div class="footer-tagline">Thương hiệu chuyên sản phẩm chăm sóc thú cưng — An toàn · Chất lượng · Uy tín từ
+                2020.</div>
+            <div class="footer-trust">
+                <div class="trust-badge">✅ Hàng chính hãng</div>
+                <div class="trust-badge">💰 Hoàn tiền 7 ngày</div>
+                <div class="trust-badge">⚡ Giao 2h nội thành</div>
+                <div class="trust-badge">🔒 Thanh toán an toàn</div>
+            </div>
+            <hr class="footer-divider">
+            <div class="footer-section-title">Liên hệ & Hỗ trợ</div>
+            <div class="footer-contact-row">
+                <div class="icon">📞</div>
+                <div>Hotline: <a href="tel:0869829725">0869.829.725</a> (8h–21h hàng ngày)</div>
+            </div>
+            <div class="footer-contact-row">
+                <div class="icon">💬</div>
+                <div>Zalo: <a href="https://zalo.me/0869829725" target="_blank">0869.829.725</a></div>
+            </div>
+            <div class="footer-contact-row">
+                <div class="icon">📧</div>
+                <div>Email: <a href="mailto:tipetshop@gmail.com">tipetshop@gmail.com</a></div>
+            </div>
+            <div class="footer-contact-row">
+                <div class="icon">📍</div>
+                <div>Địa chỉ: 348 Nguyễn Trãi, Trung Văn, Nam Từ Liêm, TP. Hà Nội</div>
+            </div>
+            <div class="footer-contact-row">
+                <div class="icon">📍</div>
+                <div>Địa chỉ: 99D phố Viên, Cổ Nhuế 2, Bắc Từ Liêm, TP. Hà Nội</div>
+            </div>
+            <hr class="footer-divider">
+            <div class="footer-section-title">Mạng xã hội</div>
+            <div class="footer-social">
+                <a href="https://www.facebook.com/profile.php?id=61574089293075" target="_blank" title="Facebook">📘</a>
+            </div>
+            <hr class="footer-divider">
+            <div class="footer-section-title">Chính sách</div>
+            <ul class="footer-links">
+                <li><a href="#">📋 Chính sách đổi trả &amp; hoàn tiền</a></li>
+                <li><a href="#">🔒 Chính sách bảo mật thông tin</a></li>
+                <li><a href="#">🚚 Chính sách vận chuyển</a></li>
+                <li><a href="#">📝 Điều khoản sử dụng</a></li>
+                <li><a href="#">🎁 Chương trình khách hàng thân thiết</a></li>
+            </ul>
+            <div class="footer-bottom">
+                <p>© 2020–2026 <strong style="color:#888">TIPET SHOP VN</strong>. Bảo lưu mọi quyền.</p>
+                <p style="margin-top:4px">Thiết kế &amp; phát triển bởi <a href="#">Tipet Tech</a> · MST: 0123456789</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BOTTOM BAR — chỉ 1 nút MUA NGAY -->
+    <div class="bottom-bar">
+        <button class="btn-buy" onclick="openOrder()">⚡ MUA NGAY</button>
+    </div>
+
+    <!-- CART OVERLAY & DRAWER -->
+    <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+    <div class="cart-drawer" id="cartDrawer">
+        <div class="drawer-title">🛒 Giỏ hàng<button class="close-btn" onclick="closeCart()">✕</button></div>
+        <div id="cartItems">
+            <div class="empty-cart">🛍️ Giỏ hàng trống</div>
+        </div>
+        <div id="cartFooter" style="display:none">
+            <div class="cart-total"><span>Tổng cộng:</span><span id="cartTotal">0₫</span></div>
+            <button class="btn-checkout" onclick="closeCart();openOrder()">Thanh toán ngay ⚡</button>
+        </div>
+    </div>
+
+    <!-- ORDER OVERLAY & DRAWER -->
+    <div class="cart-overlay" id="orderOverlay" onclick="closeOrder()"></div>
+    <div class="order-drawer" id="orderDrawer">
+        <div class="drawer-title">📦 Thông tin đặt hàng<button class="close-btn" onclick="closeOrder()">✕</button></div>
+        <div id="orderForm">
+            <div class="order-summary" id="orderSummary"></div>
+            <div class="form-group">
+                <label>👤 Họ và tên *</label>
+                <input type="text" id="fname" placeholder="Nguyễn Văn A">
+            </div>
+            <div class="form-group">
+                <label>📱 Số điện thoại *</label>
+                <input type="tel" id="fphone" placeholder="0901 234 567" inputmode="numeric"
+                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            </div>
+            <div class="form-group">
+                <label>🏠 Địa chỉ giao hàng *</label>
+                <textarea id="faddress"
+                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..."></textarea>
+            </div>
+            <div class="form-group" id="orderVariantGroup">
+                <label>⚖️ Phân loại: <span id="orderSelectedVariantLabel"
+                        style="color:var(--primary);font-weight:800"></span></label>
+                <div class="variant-options" style="margin-top:8px">
+                    <button class="variant-btn" id="ovBtn1lo" onclick="selectOrderVariant(this,'1lo')">
+                        <span class="v-weight">1 Lọ</span><span class="v-price">199.000₫</span><span class="v-gift">🚚
+                            +20k ship</span>
+                    </button>
+                    <button class="variant-btn" id="ovBtn2lo" onclick="selectOrderVariant(this,'2lo')">
+                        <span class="v-weight">2 Lọ</span><span class="v-price">369.000₫</span><span class="v-gift">🎁
+                            Tặng lược chải</span>
+                    </button>
+                    <button class="variant-btn" id="ovBtn3lo" onclick="selectOrderVariant(this,'3lo')">
+                        <span class="v-weight">3 Lọ</span><span class="v-price">499.000₫</span><span class="v-gift">🎁
+                            Tặng sữa tắm</span>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>💬 Ghi chú (tuỳ chọn)</label>
+                <input type="text" id="fnote" placeholder="VD: Gọi trước khi giao, nhà mặt tiền...">
+            </div>
+            <button class="btn-order" onclick="submitOrder()">✅ Xác nhận đặt hàng</button>
+        </div>
+        <div class="success-msg" id="successMsg">
+            <div class="check-icon">🎉</div>
+            <h3>Đặt hàng thành công!</h3>
+            <p>Cảm ơn bạn đã tin tưởng TIPET SHOP VN.<br>Đơn hàng sẽ được xử lý và giao trong 2–24h.</p>
+            <p style="margin-top:8px;color:#aaa;font-size:.75rem">Mã đơn: #<span id="orderCode"></span></p>
+        </div>
+    </div>
+
+    <!-- FAKE BUYER NOTIF -->
+    <div id="buyer-notif">
+        <div class="bn-avatar" id="bn-avatar">🐾</div>
+        <div class="bn-content">
+            <div class="bn-name" id="bn-name">Nguyễn Thị Lan</div>
+            <div class="bn-action">vừa đặt mua <span id="bn-product">Xịt ve rận 2 Lọ</span></div>
+            <div class="bn-time" id="bn-time">2 phút trước · TP.HCM</div>
+        </div>
+        <div class="bn-dot"></div>
+        <span class="bn-close" onclick="document.getElementById('buyer-notif').classList.remove('show')">✕</span>
+    </div>
+
+    <script>
+        let currentImg = 0, qty = 1, cart = [];
+        let selectedVariantKey = '1lo';
+
+        const VARIANTS = {
+            '1lo': { label: '1 Lọ', displayPrice: 199000, oldPrice: 349000, ship: 20000, cod: 75000, giftLabel: '' },
+            '2lo': { label: '2 Lọ', displayPrice: 369000, oldPrice: 698000, ship: 0, cod: 160000, giftLabel: '🎁 Tặng: 1 lược chải ve rận' },
+            '3lo': { label: '3 Lọ', displayPrice: 499000, oldPrice: 1047000, ship: 0, cod: 265000, giftLabel: '🎁 Tặng: 1 chai sữa tắm' },
+        };
+
+        function getVariant(k) { return VARIANTS[k]; }
+
+        function selectVariant(btn, key) {
+            document.querySelectorAll('.variant-section .variant-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedVariantKey = key;
+            const v = getVariant(key);
+            document.getElementById('selectedVariantLabel').textContent = v.label + ' — ' + v.displayPrice.toLocaleString('vi-VN') + '₫';
+            document.getElementById('priceMain').textContent = v.displayPrice.toLocaleString('vi-VN') + '₫';
+            document.getElementById('priceOld').textContent = v.oldPrice.toLocaleString('vi-VN') + '₫';
+            document.getElementById('priceDiscount').textContent = '-' + Math.round((1 - v.displayPrice / v.oldPrice) * 100) + '%';
+        }
+
+        function setImg(i) {
+            const imgs = document.querySelectorAll('#mainImgs img');
+            const thumbs = document.querySelectorAll('#thumbRow img');
+            const dots = document.querySelectorAll('.scroll-dot');
+            imgs[currentImg].classList.remove('active');
+            thumbs[currentImg].classList.remove('active');
+            dots[currentImg].classList.remove('active');
+            currentImg = i;
+            imgs[i].classList.add('active');
+            thumbs[i].classList.add('active');
+            dots[i].classList.add('active');
+            const row = document.getElementById('thumbRow');
+            row.scrollTo({ left: thumbs[i].offsetLeft - row.offsetWidth / 2 + thumbs[i].offsetWidth / 2, behavior: 'smooth' });
+        }
+
+        function addRelated(name, price, img) {
+            const ex = cart.find(x => x.name === name);
+            if (ex) ex.qty++;
+            else cart.push({ name, price, ship: 0, cod: Math.round(price * .4), giftLabel: '', key: '', qty: 1, img: img || '' });
+            updateCartUI(); openCart();
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((s, i) => s + i.qty, 0);
+            document.getElementById('cartCount').textContent = count;
+            const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+            const itemsEl = document.getElementById('cartItems');
+            const footer = document.getElementById('cartFooter');
+            if (!cart.length) { itemsEl.innerHTML = '<div class="empty-cart">🛍️ Giỏ hàng trống</div>'; footer.style.display = 'none'; return; }
+            footer.style.display = 'block';
+            document.getElementById('cartTotal').textContent = total.toLocaleString('vi-VN') + '₫';
+            itemsEl.innerHTML = cart.map((item, idx) => `
+                <div class="cart-item">
+                    <img src="${item.img}" onerror="this.src='https://placehold.co/64x64/f9f9f9/ccc?text=SP'" alt="">
+                    <div class="ci-info">
+                        <div class="ci-name">${item.name}</div>
+                        <div class="ci-price">${item.price.toLocaleString('vi-VN')}₫</div>
+                        <div class="ci-qty">
+                            <button class="qty-btn" onclick="cartQty(${idx},-1)">−</button>
+                            <span class="qty-num">${item.qty}</span>
+                            <button class="qty-btn" onclick="cartQty(${idx},1)">+</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function cartQty(idx, d) { cart[idx].qty += d; if (cart[idx].qty <= 0) cart.splice(idx, 1); updateCartUI(); }
+
+        function openCart() { document.getElementById('cartOverlay').classList.add('open'); document.getElementById('cartDrawer').style.display = 'block'; }
+        function closeCart() { document.getElementById('cartOverlay').classList.remove('open'); document.getElementById('cartDrawer').style.display = 'none'; }
+
+        function syncOrderSummary() {
+            let rows = '', total = 0;
+            if (cart.length) {
+                cart.forEach(i => {
+                    const lt = i.price * i.qty;
+                    rows += `<div class="os-row"><span>${i.name} x${i.qty}</span><span>${lt.toLocaleString('vi-VN')}₫</span></div>`;
+                    if (i.giftLabel) rows += `<div class="os-row" style="color:#00796b;font-weight:800"><span>${i.giftLabel}</span><span>Miễn phí</span></div>`;
+                    if (i.ship > 0) rows += `<div class="os-row" style="color:#ff6d00;font-weight:800"><span>🚚 Phí vận chuyển</span><span>${i.ship.toLocaleString('vi-VN')}₫</span></div>`;
+                    else rows += `<div class="os-row" style="color:#00c853;font-weight:800"><span>🚚 Vận chuyển</span><span>Miễn phí</span></div>`;
+                    total += lt + (i.ship || 0);
+                });
+            } else {
+                const v = getVariant(selectedVariantKey), lt = v.displayPrice * qty;
+                rows += `<div class="os-row"><span>Xịt ve rận (${v.label}) x${qty}</span><span>${lt.toLocaleString('vi-VN')}₫</span></div>`;
+                if (v.giftLabel) rows += `<div class="os-row" style="color:#00796b;font-weight:800"><span>${v.giftLabel}</span><span>Miễn phí</span></div>`;
+                if (v.ship > 0) rows += `<div class="os-row" style="color:#ff6d00;font-weight:800"><span>🚚 Phí vận chuyển</span><span>${v.ship.toLocaleString('vi-VN')}₫</span></div>`;
+                else rows += `<div class="os-row" style="color:#00c853;font-weight:800"><span>🚚 Vận chuyển</span><span>Miễn phí</span></div>`;
+                total = lt + v.ship;
+            }
+            rows += `<div class="os-row total"><span>Tổng đơn hàng</span><span>${total.toLocaleString('vi-VN')}₫</span></div>`;
+            document.getElementById('orderSummary').innerHTML = rows;
+        }
+
+        function selectOrderVariant(btn, key) {
+            document.querySelectorAll('#orderVariantGroup .variant-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedVariantKey = key;
+            const v = getVariant(key);
+            document.querySelectorAll('.variant-section .variant-btn').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + key + "'"));
+            });
+            document.getElementById('selectedVariantLabel').textContent = v.label + ' — ' + v.displayPrice.toLocaleString('vi-VN') + '₫';
+            document.getElementById('priceMain').textContent = v.displayPrice.toLocaleString('vi-VN') + '₫';
+            document.getElementById('priceOld').textContent = v.oldPrice.toLocaleString('vi-VN') + '₫';
+            document.getElementById('priceDiscount').textContent = '-' + Math.round((1 - v.displayPrice / v.oldPrice) * 100) + '%';
+            document.getElementById('orderSelectedVariantLabel').textContent = v.label + ' — ' + v.displayPrice.toLocaleString('vi-VN') + '₫';
+            syncOrderSummary();
+        }
+
+        function openOrder() {
+            document.getElementById('orderForm').style.display = 'block';
+            document.getElementById('successMsg').style.display = 'none';
+            const vg = document.getElementById('orderVariantGroup');
+            if (cart.length) { vg.style.display = 'none'; }
+            else {
+                vg.style.display = 'block';
+                document.querySelectorAll('#orderVariantGroup .variant-btn').forEach(b => b.classList.remove('active'));
+                const ab = document.getElementById('ovBtn' + selectedVariantKey);
+                if (ab) ab.classList.add('active');
+                const v = getVariant(selectedVariantKey);
+                document.getElementById('orderSelectedVariantLabel').textContent = v.label + ' — ' + v.displayPrice.toLocaleString('vi-VN') + '₫';
+            }
+            syncOrderSummary();
+            document.getElementById('orderOverlay').classList.add('open');
+            document.getElementById('orderDrawer').classList.add('open');
+        }
+        function closeOrder() { document.getElementById('orderOverlay').classList.remove('open'); document.getElementById('orderDrawer').classList.remove('open'); }
+
+        function submitOrder() {
+            const name = document.getElementById('fname').value.trim();
+            const phone = document.getElementById('fphone').value.trim();
+            const address = document.getElementById('faddress').value.trim();
+            const noteRaw = document.getElementById('fnote').value.trim();
+            const note = noteRaw ? 'FB ' + noteRaw : 'FB';
+            if (!name || !phone || !address) { alert('⚠️ Vui lòng điền đầy đủ Họ tên, Số điện thoại và Địa chỉ!'); return; }
+
+            const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxTsFsHXz7GnE6kk3nMhqZd5NP-bnagWc4Xv7NfYKU9qCvNPiDGkD4SuSbORDZJxPPX/exec';
+
+            let totalCustomer = 0, totalCod = 0, totalWeight = 0, sanPhamStr = '';
+            if (cart.length) {
+                cart.forEach(item => {
+                    const lt = item.price * item.qty, ls = item.ship || 0;
+                    totalCustomer += lt + ls; totalCod += (item.cod || 0) * item.qty;
+                    if (item.key === '1lo') totalWeight += 0.3 * item.qty;
+                    else if (item.key === '2lo') totalWeight += 0.6 * item.qty;
+                    else if (item.key === '3lo') totalWeight += 0.9 * item.qty;
+                    else totalWeight += 0.1 * item.qty;
+                    sanPhamStr += item.name + ' x' + item.qty + (item.giftLabel ? ' ' + item.giftLabel : '') + ', ';
+                });
+            } else {
+                const v = getVariant(selectedVariantKey), lt = v.displayPrice * qty;
+                totalCustomer = lt + v.ship; totalCod = v.cod * qty;
+                totalWeight = selectedVariantKey === '1lo' ? 0.3 : selectedVariantKey === '2lo' ? 0.6 : 0.9;
+                sanPhamStr = 'Xịt ve rận bọ chét (' + v.label + ') x' + qty + (v.giftLabel ? ' ' + v.giftLabel : '');
+            }
+            sanPhamStr = sanPhamStr.replace(/,\s*$/, '');
+
+            const now = new Date();
+            const thoiGian = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0') + ' ' + now.getDate() + '/' + (now.getMonth() + 1) + '/' + now.getFullYear();
+            const orderCode = Math.floor(100000 + Math.random() * 900000);
+
+            const payload = { thoiGian, hoTen: name, sdt: "'" + phone, diaChi: address, sanPham: sanPhamStr, gia: totalCustomer, canNang: totalWeight, cod: totalCod, phiShip: 20000, ghiChu: note, maDon: '#' + orderCode };
+            const bodyStr = JSON.stringify(payload);
+            let sent = false;
+            if (navigator.sendBeacon) { const blob = new Blob([bodyStr], { type: 'text/plain' }); sent = navigator.sendBeacon(SHEET_URL, blob); }
+            if (!sent) { fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', keepalive: true, headers: { 'Content-Type': 'text/plain' }, body: bodyStr }).catch(() => { }); }
+
+            cart = []; updateCartUI();
+            setTimeout(() => { window.location.href = 'https://eactshop.github.io/banh-ca-thanh-cong/'; }, 1200);
+        }
+
+        // Flash Sale countdown
+        (function () {
+            let remaining = 15 * 60;
+            const minEl = document.getElementById('cdMin'), secEl = document.getElementById('cdSec'), banner = document.getElementById('flashSaleBanner');
+            function tick() {
+                if (remaining <= 0) { banner.innerHTML = '<div class="flash-expired">⏰ Flash Sale đã kết thúc</div>'; banner.style.cssText = 'background:none;box-shadow:none;animation:none;padding:0'; return; }
+                minEl.textContent = String(Math.floor(remaining / 60)).padStart(2, '0');
+                secEl.textContent = String(remaining % 60).padStart(2, '0');
+                if (remaining <= 60) document.querySelectorAll('.cd-block').forEach(b => b.style.background = 'rgba(255,255,255,.35)');
+                remaining--;
+            }
+            tick(); setInterval(tick, 1000);
+        })();
+
+        // Review dates
+        const fd = (d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear())(new Date());
+        ['rc-date', 'rc-date1', 'rc-date2', 'rc-date3', 'rc-date4'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = fd; });
+
+        // Fake buyer notification
+        (function () {
+            const names = ['Nguyễn Thị Lan', 'Trần Minh Hải', 'Lê Thu Hương', 'Phạm Văn Đức', 'Hoàng Thị Mai', 'Vũ Quang Huy', 'Đặng Thị Nga', 'Bùi Minh Tuấn', 'Đỗ Thị Linh', 'Ngô Văn Khoa', 'Trịnh Thị Hồng', 'Lý Minh Khôi', 'Phan Thị Bích', 'Cao Văn Thắng', 'Mai Thị Yến', 'Đinh Quốc Bảo'];
+            const products = ['Xịt ve rận 1 Lọ', 'Xịt ve rận 2 Lọ 🎁', 'Xịt ve rận 3 Lọ 🎁'];
+            const cities = ['Hà Nội', 'TP.HCM', 'Đà Nẵng', 'Cần Thơ', 'Hải Phòng', 'Huế', 'Nha Trang', 'Biên Hoà', 'Vũng Tàu', 'Long Xuyên', 'Buôn Ma Thuột', 'Quy Nhơn', 'Thái Nguyên', 'Bắc Ninh', 'Bình Dương'];
+            const emojis = ['🐾', '🐱', '😸', '🐶', '🐕', '😺', '🐈', '🐩'];
+            const times = ['15 giây trước', '20 giây trước', '30 giây trước', '45 giây trước', '1 phút trước'];
+            const notif = document.getElementById('buyer-notif');
+            let t;
+            function show() {
+                document.getElementById('bn-name').textContent = names[Math.floor(Math.random() * names.length)];
+                document.getElementById('bn-product').textContent = products[Math.floor(Math.random() * products.length)];
+                document.getElementById('bn-time').textContent = times[Math.floor(Math.random() * times.length)] + ' · ' + cities[Math.floor(Math.random() * cities.length)];
+                document.getElementById('bn-avatar').textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                notif.classList.add('show');
+                clearTimeout(t); t = setTimeout(() => notif.classList.remove('show'), 4500);
+            }
+            setTimeout(() => { show(); setInterval(show, 15000); }, 4000);
+        })();
+    </script>
+
+</body>
+
+</html>
