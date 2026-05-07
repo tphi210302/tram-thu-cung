@@ -1219,13 +1219,12 @@
                 );
                 let deleteCount = 0;
                 if (toDelete.length) {
-                    // KHÔNG cộng lại tồn kho — xoá row chỉ là dọn dẹp data,
-                    // hàng đã giao rồi không có gì quay về. Chỉ "tô đỏ" (returned) mới cộng kho.
+                    // Cộng lại tồn kho — xoá row = khách huỷ đơn / trả lại, hàng quay về kho.
+                    toDelete.forEach(o => applyDeltas(negateDeltas(stockDeltaForOrder(o))));
                     const delIds = new Set(toDelete.map(x => x.id));
                     const delMaDons = new Set(toDelete.map(x => x.maDon));
                     DATA.orders = DATA.orders.filter(x => !delIds.has(x.id));
                     DATA.syncedMaDons = DATA.syncedMaDons.filter(m => !delMaDons.has(m));
-                    // Cập nhật lại localByMaDon sau khi xoá
                     delMaDons.forEach(m => delete localByMaDon[m]);
                     synced.clear();
                     DATA.syncedMaDons.forEach(m => synced.add(m));
