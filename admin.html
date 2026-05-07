@@ -187,6 +187,31 @@
         .b-returned { background: #ffebee; color: #c62828; }
         .b-promo { background: #fff3e0; color: #ef6c00; }
 
+        /* STOCK BADGE */
+        .stock-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 10px;
+            font-weight: 800; font-size: .85rem; min-width: 48px; text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        .stock-ok { background: #e8f5e9; color: #2e7d32; }
+        .stock-low { background: #fff3e0; color: #ef6c00; }
+        .stock-out { background: #ffebee; color: #c62828; }
+
+        .stock-warn-banner {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border: 1px solid rgba(255, 109, 0, .3);
+            color: #b34700;
+            padding: 10px 12px; border-radius: 12px;
+            font-size: .82rem; font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 12px;
+        }
+        .stock-warn-banner.danger {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border-color: rgba(229, 57, 53, .3);
+            color: var(--danger);
+        }
+
         /* BUTTONS */
         .btn {
             font-family: 'Nunito'; font-weight: 800; font-size: .85rem;
@@ -313,6 +338,7 @@
         <div class="panel active" id="panel-dashboard">
             <div class="card">
                 <div class="card-title">Tổng quan</div>
+                <div id="stockAlerts"></div>
                 <div class="toolbar">
                     <select class="filter-input" id="dashRange">
                         <option value="7">7 ngày gần nhất</option>
@@ -408,6 +434,7 @@
                         <thead>
                             <tr>
                                 <th>Tên</th>
+                                <th class="num">Tồn kho</th>
                                 <th class="num">Giá vốn</th>
                                 <th class="num">Giá bán</th>
                                 <th class="num">Ads/đơn</th>
@@ -573,11 +600,48 @@
                         <option value="promo">Combo khuyến mãi (free ship)</option>
                     </select>
                 </div>
+                <div class="form-row">
+                    <label>Tồn kho hiện tại</label>
+                    <input type="number" id="pStock" step="1" min="0" placeholder="0">
+                </div>
+                <div class="form-row">
+                    <label>Cảnh báo khi tồn ≤</label>
+                    <input type="number" id="pLowStock" step="1" min="0" placeholder="5">
+                </div>
             </div>
             <div class="info-box" id="pPreview"></div>
             <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
                 <button class="btn btn-ghost" onclick="closeProductModal()">Huỷ</button>
                 <button class="btn btn-primary" onclick="saveProduct()">💾 Lưu sản phẩm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STOCK-IN MODAL -->
+    <div class="modal-overlay" id="stockModal">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-title">📥 Nhập kho</div>
+                <button class="modal-close" onclick="closeStockModal()">✕</button>
+            </div>
+            <div id="stockModalBody"></div>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label>Số lượng nhập (+)</label>
+                    <input type="number" id="sQty" step="1" placeholder="0">
+                </div>
+                <div class="form-row">
+                    <label>Giá vốn/đơn vị (cập nhật)</label>
+                    <input type="number" id="sCost" step="1000" placeholder="0">
+                </div>
+            </div>
+            <div class="info-box">
+                💡 Nhập số dương để <strong>tăng tồn</strong>, số âm để <strong>giảm tồn</strong> (hàng hư, kiểm kê thiếu).<br>
+                Để trống <em>Giá vốn</em> nếu không muốn cập nhật.
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+                <button class="btn btn-ghost" onclick="closeStockModal()">Huỷ</button>
+                <button class="btn btn-primary" onclick="saveStock()">💾 Cập nhật tồn</button>
             </div>
         </div>
     </div>
@@ -597,9 +661,9 @@
                 shipShop: 20000
             },
             products: [
-                { id: 'p1', name: 'Xịt ve rận 1 Lọ', cost: 0, sellPrice: 199000, adsPerOrder: 0, kind: 'normal' },
-                { id: 'p2', name: 'Xịt ve rận 2 Lọ (Combo + sữa tắm)', cost: 0, sellPrice: 369000, adsPerOrder: 0, kind: 'promo' },
-                { id: 'p3', name: 'Xịt ve rận 3 Lọ (Combo + 2 sữa tắm)', cost: 0, sellPrice: 499000, adsPerOrder: 0, kind: 'promo' }
+                { id: 'p1', name: 'Xịt ve rận 1 Lọ', cost: 0, sellPrice: 199000, adsPerOrder: 0, kind: 'normal', stock: 0, lowStockThreshold: 5 },
+                { id: 'p2', name: 'Xịt ve rận 2 Lọ (Combo + sữa tắm)', cost: 0, sellPrice: 369000, adsPerOrder: 0, kind: 'promo', stock: 0, lowStockThreshold: 5 },
+                { id: 'p3', name: 'Xịt ve rận 3 Lọ (Combo + 2 sữa tắm)', cost: 0, sellPrice: 499000, adsPerOrder: 0, kind: 'promo', stock: 0, lowStockThreshold: 5 }
             ],
             orders: []
         };
@@ -611,10 +675,14 @@
                 const raw = localStorage.getItem(KEY);
                 if (!raw) return structuredClone(DEFAULT_DATA);
                 const parsed = JSON.parse(raw);
-                // merge with defaults to handle schema additions
+                // merge with defaults; backfill missing fields on products
+                const products = (parsed.products || []).map(p => ({
+                    stock: 0, lowStockThreshold: 5, kind: 'normal', adsPerOrder: 0, cost: 0, sellPrice: 0,
+                    ...p
+                }));
                 return {
                     settings: { ...DEFAULT_DATA.settings, ...parsed.settings },
-                    products: parsed.products || [],
+                    products,
                     orders: parsed.orders || []
                 };
             } catch (e) {
@@ -655,6 +723,30 @@
             return (+p.sellPrice || 0) - (+p.cost || 0) - (+p.adsPerOrder || 0) - ship;
         }
 
+        function stockDelta(order) {
+            // Đã giao / Khuyến mãi: hàng đã ra → trừ tồn
+            // Hoàn: hàng quay về → tồn không đổi (đã trừ khi ship, cộng lại khi nhận)
+            if (!order) return 0;
+            const q = +order.qty || 0;
+            if (order.status === 'delivered' || order.status === 'promo') return -q;
+            return 0;
+        }
+
+        function applyStock(productId, delta) {
+            const p = DATA.products.find(x => x.id === productId);
+            if (!p) return;
+            p.stock = (+p.stock || 0) + delta;
+        }
+
+        function stockBadge(p) {
+            const s = +p.stock || 0;
+            const t = +p.lowStockThreshold || 5;
+            let cls = 'stock-ok';
+            if (s <= 0) cls = 'stock-out';
+            else if (s <= t) cls = 'stock-low';
+            return `<span class="stock-badge ${cls}">${s}</span>`;
+        }
+
         function statusBadge(s) {
             if (s === 'delivered') return '<span class="badge b-delivered">Đã giao</span>';
             if (s === 'returned') return '<span class="badge b-returned">Hoàn</span>';
@@ -689,6 +781,25 @@
         }
 
         function renderDashboard() {
+            // Stock alerts
+            const out = DATA.products.filter(p => (+p.stock || 0) <= 0);
+            const low = DATA.products.filter(p => {
+                const s = +p.stock || 0;
+                return s > 0 && s <= (+p.lowStockThreshold || 5);
+            });
+            let alertsHtml = '';
+            if (out.length) {
+                alertsHtml += `<div class="stock-warn-banner danger">
+                    🚨 <span><strong>Hết hàng:</strong> ${out.map(p => p.name).join(', ')}</span>
+                </div>`;
+            }
+            if (low.length) {
+                alertsHtml += `<div class="stock-warn-banner">
+                    ⚠️ <span><strong>Sắp hết:</strong> ${low.map(p => `${p.name} (${p.stock})`).join(', ')}</span>
+                </div>`;
+            }
+            document.getElementById('stockAlerts').innerHTML = alertsHtml;
+
             const orders = getRangeOrders();
             let revenue = 0, cost = 0, ads = 0, shipLoss = 0, profit = 0;
             let cntDelivered = 0, cntReturned = 0, cntPromo = 0, totalQty = 0;
@@ -712,6 +823,10 @@
                     ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
                 </div>`;
 
+            // Stock value
+            const stockValue = DATA.products.reduce((s, p) => s + (+p.stock || 0) * (+p.cost || 0), 0);
+            const totalStockUnits = DATA.products.reduce((s, p) => s + (+p.stock || 0), 0);
+
             document.getElementById('kpiGrid').innerHTML = [
                 kpi('Doanh thu', fmt(revenue), `${total} đơn · ${totalQty} sp`),
                 kpi('Lợi nhuận ròng', fmt(profit), `Biên LN ${profitMargin.toFixed(1)}%`, profit >= 0 ? 'profit' : 'loss'),
@@ -720,7 +835,7 @@
                 kpi('Ship shop chịu', fmt(shipLoss), `${cntReturned + cntPromo} đơn`, 'warn'),
                 kpi('Tỉ lệ hoàn', returnRate.toFixed(1) + '%', `${cntReturned}/${total} đơn`, returnRate > 10 ? 'loss' : 'info'),
                 kpi('LN trung bình/đơn', fmt(avgProfit), '', avgProfit >= 0 ? 'profit' : 'loss'),
-                kpi('Đơn KM', cntPromo, `${total ? (cntPromo / total * 100).toFixed(1) : 0}%`, 'info')
+                kpi('Tồn kho', totalStockUnits + ' sp', `Trị giá ${fmt(stockValue)}`, 'info')
             ].join('');
 
             // Partner split
@@ -842,20 +957,36 @@
         }
 
         function updateOrderPreview() {
+            const pid = document.getElementById('oProduct').value;
+            const prod = DATA.products.find(x => x.id === pid);
             const o = {
                 qty: +document.getElementById('oQty').value || 1,
                 sellPrice: +document.getElementById('oSellPrice').value || 0,
                 cost: +document.getElementById('oCost').value || 0,
                 ads: +document.getElementById('oAds').value || 0,
-                status: document.getElementById('oStatus').value
+                status: document.getElementById('oStatus').value,
+                productId: pid
             };
             const r = profitOf(o);
+
+            let stockInfo = '';
+            if (prod) {
+                let oldDelta = 0;
+                if (editingOrderId) {
+                    const oldOrder = DATA.orders.find(x => x.id === editingOrderId);
+                    if (oldOrder && oldOrder.productId === pid) oldDelta = stockDelta(oldOrder);
+                }
+                const projectedStock = (+prod.stock || 0) - oldDelta + stockDelta(o);
+                const cls = projectedStock <= 0 ? 'stock-out' : (projectedStock <= (+prod.lowStockThreshold || 5) ? 'stock-low' : 'stock-ok');
+                stockInfo = `<br>📦 Tồn hiện tại: <strong>${prod.stock || 0}</strong> → sau đơn này: <span class="stock-badge ${cls}">${projectedStock}</span>`;
+            }
+
             document.getElementById('oPreview').innerHTML =
                 `<strong>📊 Xem trước:</strong><br>
                 Doanh thu: <strong>${fmt(r.revenue)}</strong> · Vốn: ${fmt(r.cost)} · Ads: ${fmt(r.ads)} · Ship lỗ: ${fmt(r.ship)}<br>
                 <strong style="color:${r.profit >= 0 ? 'var(--accent)' : 'var(--danger)'};font-size:1.05rem">
                     Lợi nhuận: ${fmt(r.profit)}
-                </strong>`;
+                </strong>${stockInfo}`;
         }
 
         ['oQty', 'oSellPrice', 'oCost', 'oAds', 'oStatus'].forEach(id =>
@@ -874,6 +1005,34 @@
                 customer: document.getElementById('oCustomer').value.trim(),
                 note: document.getElementById('oNote').value.trim()
             };
+
+            // Stock check & adjustment
+            let oldOrder = null;
+            if (editingOrderId) oldOrder = DATA.orders.find(x => x.id === editingOrderId);
+            const oldDelta = stockDelta(oldOrder);   // dương nếu đơn cũ đã trừ tồn
+            const newDelta = stockDelta(order);
+            // Net stock change
+            if (oldOrder && oldOrder.productId === order.productId) {
+                applyStock(order.productId, newDelta - oldDelta);
+            } else {
+                if (oldOrder) applyStock(oldOrder.productId, -oldDelta);  // hoàn lại tồn cho SP cũ
+                applyStock(order.productId, newDelta);
+            }
+
+            const prod = DATA.products.find(p => p.id === order.productId);
+            if (prod && prod.stock < 0) {
+                if (!confirm(`⚠️ Tồn kho "${prod.name}" sẽ thành ${prod.stock}. Vẫn lưu?`)) {
+                    // revert
+                    if (oldOrder && oldOrder.productId === order.productId) {
+                        applyStock(order.productId, oldDelta - newDelta);
+                    } else {
+                        applyStock(order.productId, -newDelta);
+                        if (oldOrder) applyStock(oldOrder.productId, oldDelta);
+                    }
+                    return;
+                }
+            }
+
             if (editingOrderId) {
                 const idx = DATA.orders.findIndex(x => x.id === editingOrderId);
                 DATA.orders[idx] = order;
@@ -886,7 +1045,9 @@
         }
 
         function deleteOrder(id) {
-            if (!confirm('Xoá đơn này?')) return;
+            if (!confirm('Xoá đơn này? Tồn kho sẽ được cộng/trừ tương ứng.')) return;
+            const o = DATA.orders.find(x => x.id === id);
+            if (o) applyStock(o.productId, -stockDelta(o));   // revert stock change
             DATA.orders = DATA.orders.filter(o => o.id !== id);
             save(); renderAll(); toast('🗑️ Đã xoá đơn');
         }
@@ -951,6 +1112,8 @@
                 document.getElementById('pSellPrice').value = p.sellPrice;
                 document.getElementById('pAds').value = p.adsPerOrder;
                 document.getElementById('pKind').value = p.kind || 'normal';
+                document.getElementById('pStock').value = p.stock || 0;
+                document.getElementById('pLowStock').value = p.lowStockThreshold || 5;
             } else {
                 document.getElementById('productModalTitle').textContent = 'Thêm sản phẩm';
                 document.getElementById('pName').value = '';
@@ -958,6 +1121,8 @@
                 document.getElementById('pSellPrice').value = '';
                 document.getElementById('pAds').value = '';
                 document.getElementById('pKind').value = 'normal';
+                document.getElementById('pStock').value = 0;
+                document.getElementById('pLowStock').value = 5;
             }
             updateProductPreview();
             document.getElementById('productModal').classList.add('open');
@@ -990,7 +1155,9 @@
                 cost: +document.getElementById('pCost').value || 0,
                 sellPrice: +document.getElementById('pSellPrice').value || 0,
                 adsPerOrder: +document.getElementById('pAds').value || 0,
-                kind: document.getElementById('pKind').value
+                kind: document.getElementById('pKind').value,
+                stock: +document.getElementById('pStock').value || 0,
+                lowStockThreshold: +document.getElementById('pLowStock').value || 5
             };
             if (editingProductId) {
                 const idx = DATA.products.findIndex(x => x.id === editingProductId);
@@ -1020,19 +1187,50 @@
                         <strong>${p.name}</strong>
                         ${p.kind === 'promo' ? '<span class="badge b-promo" style="margin-left:6px">FREE SHIP</span>' : ''}
                     </td>
+                    <td class="num">${stockBadge(p)}</td>
                     <td class="num">${fmt(p.cost)}</td>
                     <td class="num">${fmt(p.sellPrice)}</td>
                     <td class="num">${fmt(p.adsPerOrder)}</td>
                     <td class="num ${profit >= 0 ? 'pos' : 'neg'}">${fmt(profit)}</td>
                     <td>
                         <div class="row-actions">
+                            <button class="btn btn-sm btn-primary" onclick="openStockModal('${p.id}')" title="Nhập kho">📥</button>
                             <button class="btn btn-sm btn-ghost" onclick="openProductModal('${p.id}')">✏️</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">🗑️</button>
                         </div>
                     </td>
                 </tr>`;
             }).join('')
-                : `<tr><td colspan="6" class="empty-state"><div class="ic">📦</div>Chưa có sản phẩm<br><button class="btn btn-primary" style="margin-top:12px" onclick="openProductModal()">＋ Thêm sản phẩm</button></td></tr>`;
+                : `<tr><td colspan="7" class="empty-state"><div class="ic">📦</div>Chưa có sản phẩm<br><button class="btn btn-primary" style="margin-top:12px" onclick="openProductModal()">＋ Thêm sản phẩm</button></td></tr>`;
+        }
+
+        // =================== STOCK MODAL ===================
+        let stockEditingId = null;
+        function openStockModal(id) {
+            const p = DATA.products.find(x => x.id === id);
+            if (!p) return;
+            stockEditingId = id;
+            document.getElementById('stockModalBody').innerHTML =
+                `<div style="background:#fff5f6;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+                    <strong>${p.name}</strong><br>
+                    <span style="font-size:.78rem;color:var(--gray)">Tồn hiện tại:</span> ${stockBadge(p)}
+                </div>`;
+            document.getElementById('sQty').value = '';
+            document.getElementById('sCost').value = '';
+            document.getElementById('sCost').placeholder = fmt(p.cost).replace('₫', '') + ' (vốn cũ)';
+            document.getElementById('stockModal').classList.add('open');
+        }
+        function closeStockModal() { document.getElementById('stockModal').classList.remove('open'); stockEditingId = null; }
+        function saveStock() {
+            const p = DATA.products.find(x => x.id === stockEditingId);
+            if (!p) return;
+            const qty = +document.getElementById('sQty').value || 0;
+            const newCost = document.getElementById('sCost').value;
+            if (qty === 0 && newCost === '') { closeStockModal(); return; }
+            p.stock = (+p.stock || 0) + qty;
+            if (newCost !== '' && +newCost > 0) p.cost = +newCost;
+            save(); closeStockModal(); renderAll();
+            toast(qty > 0 ? `📥 Nhập ${qty} sp vào kho` : (qty < 0 ? `📤 Giảm ${Math.abs(qty)} sp khỏi kho` : '✅ Đã cập nhật vốn'));
         }
 
         // =================== SETTINGS ===================
