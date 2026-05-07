@@ -341,6 +341,7 @@
         <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
         <button class="tab" data-tab="orders">🧾 Đơn hàng</button>
         <button class="tab" data-tab="products">📦 Sản phẩm</button>
+        <button class="tab" data-tab="inventory">📥 Tồn kho</button>
         <button class="tab" data-tab="settings">⚙️ Cài đặt</button>
     </div>
 
@@ -445,12 +446,40 @@
                     <table id="productTable">
                         <thead>
                             <tr>
-                                <th>Tên</th>
-                                <th class="num">Tồn kho</th>
-                                <th class="num">Giá vốn</th>
+                                <th>Tên / BOM</th>
+                                <th class="num">Có thể bán</th>
+                                <th class="num">Vốn</th>
                                 <th class="num">Giá bán</th>
                                 <th class="num">Ads/đơn</th>
                                 <th class="num">LN dự kiến/đơn</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVENTORY -->
+        <div class="panel" id="panel-inventory">
+            <div class="card">
+                <div class="card-title">Tồn kho vật tư</div>
+                <div class="info-box" style="margin-bottom:12px">
+                    💡 Đây là kho <strong>vật tư gốc</strong> (chai xịt, chai sữa tắm…). Mỗi sản phẩm/combo tự trừ vật tư theo BOM khi tạo đơn.
+                </div>
+                <div class="toolbar">
+                    <button class="btn btn-primary" onclick="openInventoryModal()">＋ Thêm vật tư</button>
+                </div>
+                <div class="table-wrap">
+                    <table id="inventoryTable">
+                        <thead>
+                            <tr>
+                                <th>Tên vật tư</th>
+                                <th class="num">Tồn</th>
+                                <th>Đơn vị</th>
+                                <th class="num">Giá vốn / đơn vị</th>
+                                <th class="num">Trị giá tồn</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -608,10 +637,6 @@
             </div>
             <div class="form-grid">
                 <div class="form-row">
-                    <label>Giá vốn</label>
-                    <input type="number" id="pCost" step="1000" placeholder="0">
-                </div>
-                <div class="form-row">
                     <label>Giá bán</label>
                     <input type="number" id="pSellPrice" step="1000" placeholder="0">
                 </div>
@@ -619,22 +644,21 @@
                     <label>Ads/đơn</label>
                     <input type="number" id="pAds" step="1000" placeholder="0">
                 </div>
-                <div class="form-row">
+                <div class="form-row" style="grid-column:1/-1">
                     <label>Loại</label>
                     <select id="pKind">
                         <option value="normal">Đơn thường (khách trả ship)</option>
                         <option value="promo">Combo khuyến mãi (free ship)</option>
                     </select>
                 </div>
-                <div class="form-row">
-                    <label>Tồn kho hiện tại</label>
-                    <input type="number" id="pStock" step="1" min="0" placeholder="0">
-                </div>
-                <div class="form-row">
-                    <label>Cảnh báo khi tồn ≤</label>
-                    <input type="number" id="pLowStock" step="1" min="0" placeholder="5">
-                </div>
             </div>
+
+            <div class="form-row">
+                <label>📦 Thành phần (BOM) — quy đổi sang vật tư trong kho</label>
+                <div id="pBomList"></div>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="addBomRow()" style="margin-top:6px">＋ Thêm thành phần</button>
+            </div>
+
             <div class="info-box" id="pPreview"></div>
             <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
                 <button class="btn btn-ghost" onclick="closeProductModal()">Huỷ</button>
@@ -643,7 +667,7 @@
         </div>
     </div>
 
-    <!-- STOCK-IN MODAL -->
+    <!-- STOCK-IN MODAL (cho vật tư) -->
     <div class="modal-overlay" id="stockModal">
         <div class="modal">
             <div class="modal-head">
@@ -672,6 +696,42 @@
         </div>
     </div>
 
+    <!-- INVENTORY ITEM MODAL -->
+    <div class="modal-overlay" id="inventoryModal">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-title" id="invModalTitle">Thêm vật tư</div>
+                <button class="modal-close" onclick="closeInventoryModal()">✕</button>
+            </div>
+            <div class="form-row">
+                <label>Tên vật tư</label>
+                <input type="text" id="iName" placeholder="VD: Chai xịt ve rận">
+            </div>
+            <div class="form-grid">
+                <div class="form-row">
+                    <label>Đơn vị</label>
+                    <input type="text" id="iUnit" placeholder="chai, hộp, gói...">
+                </div>
+                <div class="form-row">
+                    <label>Giá vốn/đơn vị</label>
+                    <input type="number" id="iCost" step="1000" placeholder="0">
+                </div>
+                <div class="form-row">
+                    <label>Tồn ban đầu</label>
+                    <input type="number" id="iStock" step="1" min="0" placeholder="0">
+                </div>
+                <div class="form-row">
+                    <label>Cảnh báo khi tồn ≤</label>
+                    <input type="number" id="iLowStock" step="1" min="0" placeholder="5">
+                </div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+                <button class="btn btn-ghost" onclick="closeInventoryModal()">Huỷ</button>
+                <button class="btn btn-primary" onclick="saveInventory()">💾 Lưu</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -687,13 +747,17 @@
                 shipShop: 20000,
                 adsPayer: 'me'  // 'me' | 'partner' | 'both' — ai ứng Ads, được hoàn lại trước khi chia LN
             },
+            inventory: [
+                { id: 'inv_xit', name: 'Chai xịt ve rận', unit: 'chai', cost: 75000, stock: 0, lowStockThreshold: 5 },
+                { id: 'inv_sua', name: 'Chai sữa tắm', unit: 'chai', cost: 30000, stock: 0, lowStockThreshold: 5 }
+            ],
             products: [
-                // 1 lọ xịt 75k
-                { id: 'p1', name: 'Xịt ve rận 1 Lọ', cost: 75000, sellPrice: 199000, adsPerOrder: 0, kind: 'normal', stock: 0, lowStockThreshold: 5 },
-                // 2 lọ xịt + 1 sữa tắm tặng = 75*2 + 30 = 180k
-                { id: 'p2', name: 'Xịt ve rận 2 Lọ (tặng 1 sữa tắm)', cost: 180000, sellPrice: 369000, adsPerOrder: 0, kind: 'promo', stock: 0, lowStockThreshold: 5 },
-                // 3 lọ xịt + 2 sữa tắm tặng = 75*3 + 30*2 = 285k
-                { id: 'p3', name: 'Xịt ve rận 3 Lọ (tặng 2 sữa tắm)', cost: 285000, sellPrice: 499000, adsPerOrder: 0, kind: 'promo', stock: 0, lowStockThreshold: 5 }
+                { id: 'p1', name: 'Xịt ve rận 1 Lọ', sellPrice: 199000, adsPerOrder: 0, kind: 'normal',
+                    bom: [{ invId: 'inv_xit', qty: 1 }] },
+                { id: 'p2', name: 'Xịt ve rận 2 Lọ (tặng 1 sữa tắm)', sellPrice: 369000, adsPerOrder: 0, kind: 'promo',
+                    bom: [{ invId: 'inv_xit', qty: 2 }, { invId: 'inv_sua', qty: 1 }] },
+                { id: 'p3', name: 'Xịt ve rận 3 Lọ (tặng 2 sữa tắm)', sellPrice: 499000, adsPerOrder: 0, kind: 'promo',
+                    bom: [{ invId: 'inv_xit', qty: 3 }, { invId: 'inv_sua', qty: 2 }] }
             ],
             orders: []
         };
@@ -705,13 +769,29 @@
                 const raw = localStorage.getItem(KEY);
                 if (!raw) return structuredClone(DEFAULT_DATA);
                 const parsed = JSON.parse(raw);
-                // merge with defaults; backfill missing fields on products
-                const products = (parsed.products || []).map(p => ({
-                    stock: 0, lowStockThreshold: 5, kind: 'normal', adsPerOrder: 0, cost: 0, sellPrice: 0,
-                    ...p
-                }));
+                // Inventory: nếu chưa có → seed default
+                let inventory = parsed.inventory;
+                if (!inventory || !inventory.length) {
+                    inventory = structuredClone(DEFAULT_DATA.inventory);
+                }
+                // Products: backfill BOM nếu chưa có (match theo id mặc định)
+                const defaultBomById = {};
+                DEFAULT_DATA.products.forEach(p => defaultBomById[p.id] = p.bom);
+                const products = (parsed.products || []).map(p => {
+                    const out = {
+                        kind: 'normal', adsPerOrder: 0, sellPrice: 0,
+                        ...p
+                    };
+                    if (!out.bom) {
+                        out.bom = defaultBomById[p.id] ? structuredClone(defaultBomById[p.id]) : [];
+                    }
+                    // Loại bỏ field stock/lowStockThreshold cũ (đã chuyển sang inventory)
+                    delete out.stock; delete out.lowStockThreshold; delete out.cost;
+                    return out;
+                });
                 return {
                     settings: { ...DEFAULT_DATA.settings, ...parsed.settings },
+                    inventory,
                     products,
                     orders: parsed.orders || []
                 };
@@ -733,6 +813,24 @@
         const todayISO = () => new Date().toISOString().slice(0, 10);
         const uid = () => Math.random().toString(36).slice(2, 10);
 
+        // ===== Inventory & BOM helpers =====
+        function inv(id) { return DATA.inventory.find(x => x.id === id); }
+        function productCost(p) {
+            if (!p || !p.bom) return 0;
+            return p.bom.reduce((s, b) => {
+                const it = inv(b.invId);
+                return s + (it ? +it.cost * +b.qty : 0);
+            }, 0);
+        }
+        function availableForProduct(p) {
+            if (!p || !p.bom || !p.bom.length) return Infinity;
+            return Math.min(...p.bom.map(b => {
+                const it = inv(b.invId);
+                if (!it || +b.qty <= 0) return Infinity;
+                return Math.floor((+it.stock || 0) / +b.qty);
+            }));
+        }
+
         function profitOf(o) {
             const sp = +o.sellPrice || 0, c = +o.cost || 0, a = +o.ads || 0, q = +o.qty || 1;
             const shopShip = +DATA.settings.shipShop || 0;
@@ -750,31 +848,46 @@
 
         function expectedProductProfit(p) {
             const ship = p.kind === 'promo' ? +DATA.settings.shipShop : 0;
-            return (+p.sellPrice || 0) - (+p.cost || 0) - (+p.adsPerOrder || 0) - ship;
+            return (+p.sellPrice || 0) - productCost(p) - (+p.adsPerOrder || 0) - ship;
         }
 
-        function stockDelta(order) {
-            // Đã giao / Khuyến mãi: hàng đã ra → trừ tồn
-            // Hoàn: hàng quay về → tồn không đổi (đã trừ khi ship, cộng lại khi nhận)
-            if (!order) return 0;
+        // Trả về list { invId, delta } cần áp lên kho khi đơn ở trạng thái này
+        function stockDeltaForOrder(order) {
+            if (!order) return [];
             const q = +order.qty || 0;
-            if (order.status === 'delivered' || order.status === 'promo') return -q;
-            return 0;
+            // delivered/promo: hàng ra → trừ; returned: net 0 (giả định hàng về nguyên vẹn)
+            if (order.status !== 'delivered' && order.status !== 'promo') return [];
+            const p = DATA.products.find(x => x.id === order.productId);
+            if (!p || !p.bom) return [];
+            return p.bom.map(b => ({ invId: b.invId, delta: -(+b.qty * q) }));
         }
-
-        function applyStock(productId, delta) {
-            const p = DATA.products.find(x => x.id === productId);
-            if (!p) return;
-            p.stock = (+p.stock || 0) + delta;
+        function applyDeltas(deltas) {
+            deltas.forEach(d => {
+                const it = inv(d.invId);
+                if (it) it.stock = (+it.stock || 0) + d.delta;
+            });
         }
+        function negateDeltas(deltas) { return deltas.map(d => ({ ...d, delta: -d.delta })); }
 
-        function stockBadge(p) {
-            const s = +p.stock || 0;
-            const t = +p.lowStockThreshold || 5;
+        function stockBadge(it) {
+            const s = +it.stock || 0;
+            const t = +it.lowStockThreshold || 5;
             let cls = 'stock-ok';
             if (s <= 0) cls = 'stock-out';
             else if (s <= t) cls = 'stock-low';
             return `<span class="stock-badge ${cls}">${s}</span>`;
+        }
+        function availabilityBadge(p) {
+            const a = availableForProduct(p);
+            if (a === Infinity) return `<span class="stock-badge stock-low">Chưa cấu hình</span>`;
+            const minThreshold = Math.min(...(p.bom || []).map(b => {
+                const it = inv(b.invId);
+                return it ? +it.lowStockThreshold || 5 : 5;
+            }), 5);
+            let cls = 'stock-ok';
+            if (a <= 0) cls = 'stock-out';
+            else if (a <= minThreshold) cls = 'stock-low';
+            return `<span class="stock-badge ${cls}">${a} đơn</span>`;
         }
 
         function statusBadge(s) {
@@ -811,21 +924,21 @@
         }
 
         function renderDashboard() {
-            // Stock alerts
-            const out = DATA.products.filter(p => (+p.stock || 0) <= 0);
-            const low = DATA.products.filter(p => {
-                const s = +p.stock || 0;
-                return s > 0 && s <= (+p.lowStockThreshold || 5);
+            // Stock alerts (theo vật tư)
+            const out = DATA.inventory.filter(it => (+it.stock || 0) <= 0);
+            const low = DATA.inventory.filter(it => {
+                const s = +it.stock || 0;
+                return s > 0 && s <= (+it.lowStockThreshold || 5);
             });
             let alertsHtml = '';
             if (out.length) {
                 alertsHtml += `<div class="stock-warn-banner danger">
-                    🚨 <span><strong>Hết hàng:</strong> ${out.map(p => p.name).join(', ')}</span>
+                    🚨 <span><strong>Hết vật tư:</strong> ${out.map(it => it.name).join(', ')}</span>
                 </div>`;
             }
             if (low.length) {
                 alertsHtml += `<div class="stock-warn-banner">
-                    ⚠️ <span><strong>Sắp hết:</strong> ${low.map(p => `${p.name} (${p.stock})`).join(', ')}</span>
+                    ⚠️ <span><strong>Sắp hết vật tư:</strong> ${low.map(it => `${it.name} (${it.stock} ${it.unit || ''})`).join(', ')}</span>
                 </div>`;
             }
             document.getElementById('stockAlerts').innerHTML = alertsHtml;
@@ -853,9 +966,9 @@
                     ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
                 </div>`;
 
-            // Stock value
-            const stockValue = DATA.products.reduce((s, p) => s + (+p.stock || 0) * (+p.cost || 0), 0);
-            const totalStockUnits = DATA.products.reduce((s, p) => s + (+p.stock || 0), 0);
+            // Stock value (vật tư)
+            const stockValue = DATA.inventory.reduce((s, it) => s + (+it.stock || 0) * (+it.cost || 0), 0);
+            const totalStockUnits = DATA.inventory.reduce((s, it) => s + (+it.stock || 0), 0);
 
             document.getElementById('kpiGrid').innerHTML = [
                 kpi('Doanh thu', fmt(revenue), `${total} đơn · ${totalQty} sp`),
@@ -865,7 +978,7 @@
                 kpi('Ship shop chịu', fmt(shipLoss), `${cntReturned + cntPromo} đơn`, 'warn'),
                 kpi('Tỉ lệ hoàn', returnRate.toFixed(1) + '%', `${cntReturned}/${total} đơn`, returnRate > 10 ? 'loss' : 'info'),
                 kpi('LN trung bình/đơn', fmt(avgProfit), '', avgProfit >= 0 ? 'profit' : 'loss'),
-                kpi('Tồn kho', totalStockUnits + ' sp', `Trị giá ${fmt(stockValue)}`, 'info')
+                kpi('Tồn kho vật tư', totalStockUnits + ' đv', `Trị giá ${fmt(stockValue)}`, 'info')
             ].join('');
 
             // Ads refund banner
@@ -1006,7 +1119,7 @@
             const p = DATA.products.find(x => x.id === pid);
             if (!p) return;
             document.getElementById('oSellPrice').value = p.sellPrice;
-            document.getElementById('oCost').value = p.cost;
+            document.getElementById('oCost').value = productCost(p);
             document.getElementById('oAds').value = p.adsPerOrder;
             if (!editingOrderId) {
                 document.getElementById('oStatus').value = p.kind === 'promo' ? 'promo' : 'delivered';
@@ -1028,15 +1141,30 @@
             const r = profitOf(o);
 
             let stockInfo = '';
-            if (prod) {
-                let oldDelta = 0;
+            if (prod && prod.bom && prod.bom.length) {
+                // Compute projected inventory after this order
+                let oldDeltas = [];
                 if (editingOrderId) {
                     const oldOrder = DATA.orders.find(x => x.id === editingOrderId);
-                    if (oldOrder && oldOrder.productId === pid) oldDelta = stockDelta(oldOrder);
+                    if (oldOrder) oldDeltas = stockDeltaForOrder(oldOrder);
                 }
-                const projectedStock = (+prod.stock || 0) - oldDelta + stockDelta(o);
-                const cls = projectedStock <= 0 ? 'stock-out' : (projectedStock <= (+prod.lowStockThreshold || 5) ? 'stock-low' : 'stock-ok');
-                stockInfo = `<br>📦 Tồn hiện tại: <strong>${prod.stock || 0}</strong> → sau đơn này: <span class="stock-badge ${cls}">${projectedStock}</span>`;
+                const newDeltas = stockDeltaForOrder(o);
+
+                // Build map of net change per inventory item
+                const net = {};
+                oldDeltas.forEach(d => net[d.invId] = (net[d.invId] || 0) - d.delta); // revert old
+                newDeltas.forEach(d => net[d.invId] = (net[d.invId] || 0) + d.delta);
+
+                const lines = prod.bom.map(b => {
+                    const it = inv(b.invId);
+                    if (!it) return '';
+                    const projected = (+it.stock || 0) + (net[b.invId] || 0);
+                    const cls = projected <= 0 ? 'stock-out' : (projected <= (+it.lowStockThreshold || 5) ? 'stock-low' : 'stock-ok');
+                    return `${it.name}: ${it.stock || 0} → <span class="stock-badge ${cls}">${projected}</span>`;
+                }).join(' · ');
+                stockInfo = `<br>📦 ${lines}`;
+            } else if (prod) {
+                stockInfo = `<br>⚠️ Sản phẩm chưa có BOM, không tính tồn kho.`;
             }
 
             document.getElementById('oPreview').innerHTML =
@@ -1064,29 +1192,24 @@
                 note: document.getElementById('oNote').value.trim()
             };
 
-            // Stock check & adjustment
+            // Stock check & adjustment (BOM-based)
             let oldOrder = null;
             if (editingOrderId) oldOrder = DATA.orders.find(x => x.id === editingOrderId);
-            const oldDelta = stockDelta(oldOrder);   // dương nếu đơn cũ đã trừ tồn
-            const newDelta = stockDelta(order);
-            // Net stock change
-            if (oldOrder && oldOrder.productId === order.productId) {
-                applyStock(order.productId, newDelta - oldDelta);
-            } else {
-                if (oldOrder) applyStock(oldOrder.productId, -oldDelta);  // hoàn lại tồn cho SP cũ
-                applyStock(order.productId, newDelta);
-            }
+            const oldDeltas = stockDeltaForOrder(oldOrder);
+            const newDeltas = stockDeltaForOrder(order);
 
-            const prod = DATA.products.find(p => p.id === order.productId);
-            if (prod && prod.stock < 0) {
-                if (!confirm(`⚠️ Tồn kho "${prod.name}" sẽ thành ${prod.stock}. Vẫn lưu?`)) {
-                    // revert
-                    if (oldOrder && oldOrder.productId === order.productId) {
-                        applyStock(order.productId, oldDelta - newDelta);
-                    } else {
-                        applyStock(order.productId, -newDelta);
-                        if (oldOrder) applyStock(oldOrder.productId, oldDelta);
-                    }
+            // Revert old, apply new
+            applyDeltas(negateDeltas(oldDeltas));
+            applyDeltas(newDeltas);
+
+            // Check for negative inventory
+            const negatives = DATA.inventory.filter(it => (+it.stock || 0) < 0);
+            if (negatives.length) {
+                const msg = negatives.map(it => `${it.name}: ${it.stock}`).join('\n');
+                if (!confirm(`⚠️ Tồn kho sẽ âm:\n${msg}\nVẫn lưu?`)) {
+                    // revert change
+                    applyDeltas(negateDeltas(newDeltas));
+                    applyDeltas(oldDeltas);
                     return;
                 }
             }
@@ -1105,8 +1228,8 @@
         function deleteOrder(id) {
             if (!confirm('Xoá đơn này? Tồn kho sẽ được cộng/trừ tương ứng.')) return;
             const o = DATA.orders.find(x => x.id === id);
-            if (o) applyStock(o.productId, -stockDelta(o));   // revert stock change
-            DATA.orders = DATA.orders.filter(o => o.id !== id);
+            if (o) applyDeltas(negateDeltas(stockDeltaForOrder(o)));
+            DATA.orders = DATA.orders.filter(x => x.id !== id);
             save(); renderAll(); toast('🗑️ Đã xoá đơn');
         }
 
@@ -1159,6 +1282,7 @@
         // =================== PRODUCTS ===================
         let editingProductId = null;
 
+        let editingBom = [];
         function openProductModal(id) {
             editingProductId = id || null;
             if (id) {
@@ -1166,42 +1290,79 @@
                 if (!p) return;
                 document.getElementById('productModalTitle').textContent = 'Sửa sản phẩm';
                 document.getElementById('pName').value = p.name;
-                document.getElementById('pCost').value = p.cost;
                 document.getElementById('pSellPrice').value = p.sellPrice;
                 document.getElementById('pAds').value = p.adsPerOrder;
                 document.getElementById('pKind').value = p.kind || 'normal';
-                document.getElementById('pStock').value = p.stock || 0;
-                document.getElementById('pLowStock').value = p.lowStockThreshold || 5;
+                editingBom = (p.bom || []).map(b => ({ ...b }));
             } else {
                 document.getElementById('productModalTitle').textContent = 'Thêm sản phẩm';
                 document.getElementById('pName').value = '';
-                document.getElementById('pCost').value = '';
                 document.getElementById('pSellPrice').value = '';
                 document.getElementById('pAds').value = '';
                 document.getElementById('pKind').value = 'normal';
-                document.getElementById('pStock').value = 0;
-                document.getElementById('pLowStock').value = 5;
+                editingBom = [];
             }
+            renderBomEditor();
             updateProductPreview();
             document.getElementById('productModal').classList.add('open');
         }
         function closeProductModal() { document.getElementById('productModal').classList.remove('open'); }
 
+        function renderBomEditor() {
+            const wrap = document.getElementById('pBomList');
+            if (!DATA.inventory.length) {
+                wrap.innerHTML = `<div style="font-size:.8rem;color:var(--gray);padding:8px;background:#f9f9f9;border-radius:8px">Chưa có vật tư nào trong kho. Hãy vào tab <strong>📥 Tồn kho</strong> để thêm trước.</div>`;
+                return;
+            }
+            if (!editingBom.length) {
+                wrap.innerHTML = `<div style="font-size:.8rem;color:var(--gray);padding:8px;background:#f9f9f9;border-radius:8px">Chưa có thành phần. Bấm <strong>＋ Thêm thành phần</strong> để gán vật tư.</div>`;
+                return;
+            }
+            wrap.innerHTML = editingBom.map((b, i) => `
+                <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+                    <select onchange="editingBom[${i}].invId=this.value;updateProductPreview()" style="flex:1;border:1.5px solid var(--line);border-radius:8px;padding:7px;font-family:'Nunito';font-size:.85rem">
+                        ${DATA.inventory.map(it => `<option value="${it.id}" ${b.invId === it.id ? 'selected' : ''}>${it.name} (${fmt(it.cost)})</option>`).join('')}
+                    </select>
+                    <input type="number" min="1" step="1" value="${b.qty}" onchange="editingBom[${i}].qty=+this.value;updateProductPreview()" style="width:70px;border:1.5px solid var(--line);border-radius:8px;padding:7px;font-family:'Nunito';font-size:.85rem;text-align:center">
+                    <button class="btn btn-sm btn-danger" onclick="removeBomRow(${i})" type="button">🗑️</button>
+                </div>`).join('');
+        }
+        function addBomRow() {
+            if (!DATA.inventory.length) {
+                alert('Hãy thêm vật tư vào kho trước (tab 📥 Tồn kho)');
+                return;
+            }
+            editingBom.push({ invId: DATA.inventory[0].id, qty: 1 });
+            renderBomEditor();
+            updateProductPreview();
+        }
+        function removeBomRow(i) {
+            editingBom.splice(i, 1);
+            renderBomEditor();
+            updateProductPreview();
+        }
+
         function updateProductPreview() {
             const p = {
-                cost: +document.getElementById('pCost').value || 0,
+                bom: editingBom,
                 sellPrice: +document.getElementById('pSellPrice').value || 0,
                 adsPerOrder: +document.getElementById('pAds').value || 0,
                 kind: document.getElementById('pKind').value
             };
+            const cost = productCost(p);
             const profit = expectedProductProfit(p);
             const margin = p.sellPrice ? profit / p.sellPrice * 100 : 0;
+            const bomDesc = editingBom.length
+                ? editingBom.map(b => { const it = inv(b.invId); return it ? `${b.qty} ${it.name}` : ''; }).filter(Boolean).join(' + ')
+                : '(chưa có)';
             document.getElementById('pPreview').innerHTML =
-                `<strong>📊 Lợi nhuận dự kiến/đơn:</strong>
+                `📦 Cấu thành: <strong>${bomDesc}</strong><br>
+                💰 Giá vốn (tính từ BOM): <strong>${fmt(cost)}</strong><br>
+                <strong>📊 LN dự kiến/đơn:</strong>
                 <strong style="color:${profit >= 0 ? 'var(--accent)' : 'var(--danger)'}">${fmt(profit)}</strong>
                 (biên LN ${margin.toFixed(1)}%)`;
         }
-        ['pCost', 'pSellPrice', 'pAds', 'pKind'].forEach(id =>
+        ['pSellPrice', 'pAds', 'pKind'].forEach(id =>
             document.getElementById(id).addEventListener('input', updateProductPreview));
 
         function saveProduct() {
@@ -1210,12 +1371,10 @@
             const product = {
                 id: editingProductId || uid(),
                 name,
-                cost: +document.getElementById('pCost').value || 0,
                 sellPrice: +document.getElementById('pSellPrice').value || 0,
                 adsPerOrder: +document.getElementById('pAds').value || 0,
                 kind: document.getElementById('pKind').value,
-                stock: +document.getElementById('pStock').value || 0,
-                lowStockThreshold: +document.getElementById('pLowStock').value || 5
+                bom: editingBom.filter(b => b.invId && +b.qty > 0).map(b => ({ invId: b.invId, qty: +b.qty }))
             };
             if (editingProductId) {
                 const idx = DATA.products.findIndex(x => x.id === editingProductId);
@@ -1240,19 +1399,24 @@
             const tbody = document.querySelector('#productTable tbody');
             tbody.innerHTML = DATA.products.length ? DATA.products.map(p => {
                 const profit = expectedProductProfit(p);
+                const cost = productCost(p);
+                const bomDesc = (p.bom || []).map(b => {
+                    const it = inv(b.invId);
+                    return it ? `${b.qty} ${it.name.toLowerCase()}` : '';
+                }).filter(Boolean).join(' + ') || '(chưa có BOM)';
                 return `<tr>
                     <td>
                         <strong>${p.name}</strong>
                         ${p.kind === 'promo' ? '<span class="badge b-promo" style="margin-left:6px">FREE SHIP</span>' : ''}
+                        <div style="font-size:.7rem;color:#888;margin-top:2px">📦 ${bomDesc}</div>
                     </td>
-                    <td class="num">${stockBadge(p)}</td>
-                    <td class="num">${fmt(p.cost)}</td>
+                    <td class="num">${availabilityBadge(p)}</td>
+                    <td class="num">${fmt(cost)}</td>
                     <td class="num">${fmt(p.sellPrice)}</td>
                     <td class="num">${fmt(p.adsPerOrder)}</td>
                     <td class="num ${profit >= 0 ? 'pos' : 'neg'}">${fmt(profit)}</td>
                     <td>
                         <div class="row-actions">
-                            <button class="btn btn-sm btn-primary" onclick="openStockModal('${p.id}')" title="Nhập kho">📥</button>
                             <button class="btn btn-sm btn-ghost" onclick="openProductModal('${p.id}')">✏️</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}')">🗑️</button>
                         </div>
@@ -1262,33 +1426,111 @@
                 : `<tr><td colspan="7" class="empty-state"><div class="ic">📦</div>Chưa có sản phẩm<br><button class="btn btn-primary" style="margin-top:12px" onclick="openProductModal()">＋ Thêm sản phẩm</button></td></tr>`;
         }
 
-        // =================== STOCK MODAL ===================
+        // =================== STOCK-IN MODAL (vật tư) ===================
         let stockEditingId = null;
-        function openStockModal(id) {
-            const p = DATA.products.find(x => x.id === id);
-            if (!p) return;
-            stockEditingId = id;
+        function openStockModal(invId) {
+            const it = inv(invId);
+            if (!it) return;
+            stockEditingId = invId;
             document.getElementById('stockModalBody').innerHTML =
                 `<div style="background:#fff5f6;border-radius:10px;padding:10px 12px;margin-bottom:12px">
-                    <strong>${p.name}</strong><br>
-                    <span style="font-size:.78rem;color:var(--gray)">Tồn hiện tại:</span> ${stockBadge(p)}
+                    <strong>${it.name}</strong><br>
+                    <span style="font-size:.78rem;color:var(--gray)">Tồn hiện tại:</span> ${stockBadge(it)} ${it.unit || ''}
                 </div>`;
             document.getElementById('sQty').value = '';
             document.getElementById('sCost').value = '';
-            document.getElementById('sCost').placeholder = fmt(p.cost).replace('₫', '') + ' (vốn cũ)';
+            document.getElementById('sCost').placeholder = fmt(it.cost).replace('₫', '') + ' (vốn cũ)';
             document.getElementById('stockModal').classList.add('open');
         }
         function closeStockModal() { document.getElementById('stockModal').classList.remove('open'); stockEditingId = null; }
         function saveStock() {
-            const p = DATA.products.find(x => x.id === stockEditingId);
-            if (!p) return;
+            const it = inv(stockEditingId);
+            if (!it) return;
             const qty = +document.getElementById('sQty').value || 0;
             const newCost = document.getElementById('sCost').value;
             if (qty === 0 && newCost === '') { closeStockModal(); return; }
-            p.stock = (+p.stock || 0) + qty;
-            if (newCost !== '' && +newCost > 0) p.cost = +newCost;
+            it.stock = (+it.stock || 0) + qty;
+            if (newCost !== '' && +newCost > 0) it.cost = +newCost;
             save(); closeStockModal(); renderAll();
-            toast(qty > 0 ? `📥 Nhập ${qty} sp vào kho` : (qty < 0 ? `📤 Giảm ${Math.abs(qty)} sp khỏi kho` : '✅ Đã cập nhật vốn'));
+            const unit = it.unit || '';
+            toast(qty > 0 ? `📥 Nhập ${qty} ${unit} ${it.name}` : (qty < 0 ? `📤 Giảm ${Math.abs(qty)} ${unit}` : '✅ Đã cập nhật vốn'));
+        }
+
+        // =================== INVENTORY CRUD ===================
+        let editingInvId = null;
+        function openInventoryModal(id) {
+            editingInvId = id || null;
+            if (id) {
+                const it = inv(id); if (!it) return;
+                document.getElementById('invModalTitle').textContent = 'Sửa vật tư';
+                document.getElementById('iName').value = it.name;
+                document.getElementById('iUnit').value = it.unit || '';
+                document.getElementById('iCost').value = it.cost || 0;
+                document.getElementById('iStock').value = it.stock || 0;
+                document.getElementById('iLowStock').value = it.lowStockThreshold || 5;
+            } else {
+                document.getElementById('invModalTitle').textContent = 'Thêm vật tư';
+                document.getElementById('iName').value = '';
+                document.getElementById('iUnit').value = 'chai';
+                document.getElementById('iCost').value = '';
+                document.getElementById('iStock').value = 0;
+                document.getElementById('iLowStock').value = 5;
+            }
+            document.getElementById('inventoryModal').classList.add('open');
+        }
+        function closeInventoryModal() { document.getElementById('inventoryModal').classList.remove('open'); editingInvId = null; }
+        function saveInventory() {
+            const name = document.getElementById('iName').value.trim();
+            if (!name) { alert('Hãy nhập tên vật tư'); return; }
+            const item = {
+                id: editingInvId || ('inv_' + uid()),
+                name,
+                unit: document.getElementById('iUnit').value.trim() || 'cái',
+                cost: +document.getElementById('iCost').value || 0,
+                stock: +document.getElementById('iStock').value || 0,
+                lowStockThreshold: +document.getElementById('iLowStock').value || 5
+            };
+            if (editingInvId) {
+                const idx = DATA.inventory.findIndex(x => x.id === editingInvId);
+                DATA.inventory[idx] = item;
+            } else {
+                DATA.inventory.push(item);
+            }
+            save(); closeInventoryModal(); renderAll();
+            toast(editingInvId ? '✅ Đã cập nhật vật tư' : '✅ Đã thêm vật tư');
+            editingInvId = null;
+        }
+        function deleteInventory(id) {
+            const used = DATA.products.some(p => (p.bom || []).some(b => b.invId === id));
+            if (used) {
+                if (!confirm('Vật tư này đang dùng trong BOM của sản phẩm. Vẫn xoá?')) return;
+            } else {
+                if (!confirm('Xoá vật tư này?')) return;
+            }
+            DATA.inventory = DATA.inventory.filter(x => x.id !== id);
+            save(); renderAll(); toast('🗑️ Đã xoá vật tư');
+        }
+
+        function renderInventory() {
+            const tbody = document.querySelector('#inventoryTable tbody');
+            tbody.innerHTML = DATA.inventory.length ? DATA.inventory.map(it => {
+                const value = (+it.stock || 0) * (+it.cost || 0);
+                return `<tr>
+                    <td><strong>${it.name}</strong></td>
+                    <td class="num">${stockBadge(it)}</td>
+                    <td>${it.unit || ''}</td>
+                    <td class="num">${fmt(it.cost)}</td>
+                    <td class="num">${fmt(value)}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="btn btn-sm btn-primary" onclick="openStockModal('${it.id}')" title="Nhập kho">📥</button>
+                            <button class="btn btn-sm btn-ghost" onclick="openInventoryModal('${it.id}')">✏️</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteInventory('${it.id}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('')
+                : `<tr><td colspan="6" class="empty-state"><div class="ic">📥</div>Chưa có vật tư<br><button class="btn btn-primary" style="margin-top:12px" onclick="openInventoryModal()">＋ Thêm vật tư đầu tiên</button></td></tr>`;
         }
 
         // =================== SETTINGS ===================
@@ -1346,7 +1588,9 @@
                     const obj = JSON.parse(ev.target.result);
                     if (!obj.products || !obj.orders) throw new Error('Invalid file');
                     if (!confirm('Khôi phục sẽ ghi đè dữ liệu hiện tại. Tiếp tục?')) return;
-                    DATA = { ...DEFAULT_DATA, ...obj, settings: { ...DEFAULT_DATA.settings, ...obj.settings } };
+                    DATA = { ...DEFAULT_DATA, ...obj,
+                        inventory: obj.inventory || structuredClone(DEFAULT_DATA.inventory),
+                        settings: { ...DEFAULT_DATA.settings, ...obj.settings } };
                     save(); loadSettings(); renderAll();
                     toast('✅ Đã khôi phục dữ liệu');
                 } catch (err) { alert('File JSON không hợp lệ'); }
@@ -1367,7 +1611,7 @@
         }
 
         // =================== MAIN ===================
-        function renderAll() { renderDashboard(); renderOrders(); renderProducts(); }
+        function renderAll() { renderDashboard(); renderOrders(); renderProducts(); renderInventory(); }
 
         loadSettings();
         bindSettings();
