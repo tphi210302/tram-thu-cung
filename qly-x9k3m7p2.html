@@ -488,6 +488,7 @@
     <div class="tabs">
         <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
         <button class="tab" data-tab="orders">🧾 Đơn hàng</button>
+        <button class="tab" data-tab="ads">📺 Quảng cáo</button>
         <button class="tab" data-tab="products">📦 Sản phẩm</button>
         <button class="tab" data-tab="inventory">📥 Tồn kho</button>
         <button class="tab" data-tab="settings">⚙️ Cài đặt</button>
@@ -602,8 +603,36 @@
                                 <th class="num">Có thể bán</th>
                                 <th class="num">Vốn</th>
                                 <th class="num">Giá bán</th>
-                                <th class="num">Ads/đơn</th>
                                 <th class="num">LN dự kiến/đơn</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADS -->
+        <div class="panel" id="panel-ads">
+            <div class="card">
+                <div class="card-title">Chi phí Quảng cáo theo ngày</div>
+                <div class="info-box" style="margin-bottom:12px">
+                    💡 Mỗi ngày chỉ cần nhập <strong>1 con số tổng tiền Ads</strong>. Hệ thống tự phân bổ đều cho các đơn trong ngày đó để tính lợi nhuận từng đơn.
+                </div>
+                <div class="kpi-grid" id="adsKpi" style="margin-bottom:12px"></div>
+                <div class="toolbar">
+                    <button class="btn btn-primary" onclick="openAdsModal()">＋ Thêm chi phí ngày</button>
+                </div>
+                <div class="table-wrap">
+                    <table id="adsTable">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th class="num">Tiền Ads</th>
+                                <th class="num">Số đơn</th>
+                                <th class="num">Phân bổ/đơn</th>
+                                <th>Ghi chú</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -763,10 +792,7 @@
                     <label>Vốn/đơn vị</label>
                     <input type="number" id="oCost" step="1000">
                 </div>
-                <div class="form-row">
-                    <label>Ads/đơn vị</label>
-                    <input type="number" id="oAds" step="1000">
-                </div>
+                <input type="hidden" id="oAds" value="0">
                 <div class="form-row">
                     <label>Khách hàng (tuỳ chọn)</label>
                     <input type="text" id="oCustomer">
@@ -800,10 +826,7 @@
                     <label>Giá bán</label>
                     <input type="number" id="pSellPrice" step="1000" placeholder="0">
                 </div>
-                <div class="form-row">
-                    <label>Ads/đơn</label>
-                    <input type="number" id="pAds" step="1000" placeholder="0">
-                </div>
+                <input type="hidden" id="pAds" value="0">
                 <div class="form-row" style="grid-column:1/-1">
                     <label>Loại</label>
                     <select id="pKind">
@@ -852,6 +875,33 @@
             <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
                 <button class="btn btn-ghost" onclick="closeStockModal()">Huỷ</button>
                 <button class="btn btn-primary" onclick="saveStock()">💾 Cập nhật tồn</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADS DAILY MODAL -->
+    <div class="modal-overlay" id="adsModal">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-title" id="adsModalTitle">Thêm chi phí Ads</div>
+                <button class="modal-close" onclick="closeAdsModal()">✕</button>
+            </div>
+            <div class="form-row">
+                <label>📅 Ngày</label>
+                <input type="date" id="aDate">
+            </div>
+            <div class="form-row">
+                <label>💰 Tổng tiền Ads (VNĐ)</label>
+                <input type="number" id="aAmount" step="1000" placeholder="VD: 200000">
+            </div>
+            <div class="form-row">
+                <label>Ghi chú (tuỳ chọn)</label>
+                <input type="text" id="aNote" placeholder="VD: FB Ads, TikTok, Google Ads...">
+            </div>
+            <div class="info-box" id="aPreview"></div>
+            <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+                <button class="btn btn-ghost" onclick="closeAdsModal()">Huỷ</button>
+                <button class="btn btn-primary" onclick="saveAds()">💾 Lưu</button>
             </div>
         </div>
     </div>
@@ -991,6 +1041,7 @@
                 { id: 'inv_sua', name: 'Chai sữa tắm', unit: 'chai', cost: 30000, stock: 0, lowStockThreshold: 5 }
             ],
             syncedMaDons: [],  // các maDon đã sync từ web — tránh duplicate
+            adsDaily: []       // [{id, date:'YYYY-MM-DD', amount, note}]
             products: [
                 { id: 'p1', name: 'Xịt ve rận 1 Lọ', sellPrice: 199000, adsPerOrder: 0, kind: 'normal',
                     bom: [{ invId: 'inv_xit', qty: 1 }] },
@@ -1020,7 +1071,8 @@
                 inventory,
                 products,
                 orders: parsed.orders || [],
-                syncedMaDons: parsed.syncedMaDons || []
+                syncedMaDons: parsed.syncedMaDons || [],
+                adsDaily: parsed.adsDaily || []
             };
         }
 
@@ -1267,24 +1319,42 @@
             }));
         }
 
+        // Tổng tiền Ads của 1 ngày (cộng các entry adsDaily cùng date)
+        function getDailyAdsTotal(date) {
+            if (!date) return 0;
+            return (DATA.adsDaily || []).filter(a => a.date === date).reduce((s, a) => s + (+a.amount || 0), 0);
+        }
+
+        // Phân bổ Ads cho 1 đơn = tổng Ads ngày đó / số đơn cùng ngày (chia đều, mọi trạng thái)
+        function getAllocatedAdsForOrder(o) {
+            if (!o || !o.date) return 0;
+            const total = getDailyAdsTotal(o.date);
+            if (!total) return 0;
+            const cnt = DATA.orders.filter(x => x.date === o.date).length;
+            if (!cnt) return 0;
+            return total / cnt;
+        }
+
         function profitOf(o) {
-            const sp = +o.sellPrice || 0, c = +o.cost || 0, a = +o.ads || 0, q = +o.qty || 1;
+            const sp = +o.sellPrice || 0, c = +o.cost || 0, q = +o.qty || 1;
+            const a = getAllocatedAdsForOrder(o); // ads phân bổ theo NGÀY, không nhân qty
             const shopShip = +DATA.settings.shipShop || 0;
             if (o.status === 'delivered') {
-                return { revenue: sp * q, cost: c * q, ads: a * q, ship: 0, profit: sp * q - c * q - a * q };
+                return { revenue: sp * q, cost: c * q, ads: a, ship: 0, profit: sp * q - c * q - a };
             }
             if (o.status === 'returned') {
-                return { revenue: 0, cost: 0, ads: a * q, ship: shopShip, profit: -(a * q) - shopShip };
+                return { revenue: 0, cost: 0, ads: a, ship: shopShip, profit: -a - shopShip };
             }
             if (o.status === 'promo') {
-                return { revenue: sp * q, cost: c * q, ads: a * q, ship: shopShip, profit: sp * q - c * q - a * q - shopShip };
+                return { revenue: sp * q, cost: c * q, ads: a, ship: shopShip, profit: sp * q - c * q - a - shopShip };
             }
             return { revenue: 0, cost: 0, ads: 0, ship: 0, profit: 0 };
         }
 
+        // LN dự kiến/đơn (chưa trừ Ads — Ads tính riêng theo ngày)
         function expectedProductProfit(p) {
             const ship = p.kind === 'promo' ? +DATA.settings.shipShop : 0;
-            return (+p.sellPrice || 0) - productCost(p) - (+p.adsPerOrder || 0) - ship;
+            return (+p.sellPrice || 0) - productCost(p) - ship;
         }
 
         // Trả về list { invId, delta } cần áp lên kho khi đơn ở trạng thái này
@@ -1556,7 +1626,7 @@
             if (!p) return;
             document.getElementById('oSellPrice').value = p.sellPrice;
             document.getElementById('oCost').value = productCost(p);
-            document.getElementById('oAds').value = p.adsPerOrder;
+            // Ads không set từ product nữa — tính theo ngày
             if (!editingOrderId) {
                 document.getElementById('oStatus').value = p.kind === 'promo' ? 'promo' : 'delivered';
             }
@@ -1566,11 +1636,12 @@
         function updateOrderPreview() {
             const pid = document.getElementById('oProduct').value;
             const prod = DATA.products.find(x => x.id === pid);
+            const date = document.getElementById('oDate').value;
             const o = {
+                date: date,
                 qty: +document.getElementById('oQty').value || 1,
                 sellPrice: +document.getElementById('oSellPrice').value || 0,
                 cost: +document.getElementById('oCost').value || 0,
-                ads: +document.getElementById('oAds').value || 0,
                 status: document.getElementById('oStatus').value,
                 productId: pid
             };
@@ -1603,15 +1674,21 @@
                 stockInfo = `<br>⚠️ Sản phẩm chưa có BOM, không tính tồn kho.`;
             }
 
+            // Cảnh báo nếu ngày này chưa có ads (sẽ tính = 0)
+            const dailyTotal = getDailyAdsTotal(date);
+            const adsHint = dailyTotal === 0
+                ? '<br><span style="color:var(--warn);font-size:.78rem">⚠️ Chưa nhập Ads cho ngày này — vào tab 📺 Quảng cáo để thêm.</span>'
+                : `<br><span style="font-size:.78rem;color:var(--gray)">📺 Ads ngày ${date}: ${fmt(dailyTotal)} (đã phân bổ ${fmt(r.ads)} cho đơn này)</span>`;
+
             document.getElementById('oPreview').innerHTML =
                 `<strong>📊 Xem trước:</strong><br>
                 Doanh thu: <strong>${fmt(r.revenue)}</strong> · Vốn: ${fmt(r.cost)} · Ads: ${fmt(r.ads)} · Ship lỗ: ${fmt(r.ship)}<br>
                 <strong style="color:${r.profit >= 0 ? 'var(--accent)' : 'var(--danger)'};font-size:1.05rem">
                     Lợi nhuận: ${fmt(r.profit)}
-                </strong>${stockInfo}`;
+                </strong>${adsHint}${stockInfo}`;
         }
 
-        ['oQty', 'oSellPrice', 'oCost', 'oAds', 'oStatus'].forEach(id =>
+        ['oQty', 'oSellPrice', 'oCost', 'oStatus', 'oDate', 'oProduct'].forEach(id =>
             document.getElementById(id).addEventListener('input', updateOrderPreview));
 
         function saveOrder() {
@@ -1849,7 +1926,6 @@
                     <td class="num">${availabilityBadge(p)}</td>
                     <td class="num">${fmt(cost)}</td>
                     <td class="num">${fmt(p.sellPrice)}</td>
-                    <td class="num">${fmt(p.adsPerOrder)}</td>
                     <td class="num ${profit >= 0 ? 'pos' : 'neg'}">${fmt(profit)}</td>
                     <td>
                         <div class="row-actions">
@@ -1859,7 +1935,7 @@
                     </td>
                 </tr>`;
             }).join('')
-                : `<tr><td colspan="7" class="empty-state"><div class="ic">📦</div>Chưa có sản phẩm<br><button class="btn btn-primary" style="margin-top:12px" onclick="openProductModal()">＋ Thêm sản phẩm</button></td></tr>`;
+                : `<tr><td colspan="6" class="empty-state"><div class="ic">📦</div>Chưa có sản phẩm<br><button class="btn btn-primary" style="margin-top:12px" onclick="openProductModal()">＋ Thêm sản phẩm</button></td></tr>`;
         }
 
         // =================== STOCK-IN MODAL (vật tư) ===================
@@ -2046,8 +2122,125 @@
             toast('🗑️ Đã xoá toàn bộ');
         }
 
+        // =================== ADS DAILY ===================
+        let editingAdsId = null;
+
+        function openAdsModal(id, defaultDate) {
+            editingAdsId = id || null;
+            if (id) {
+                const a = (DATA.adsDaily || []).find(x => x.id === id);
+                if (!a) return;
+                document.getElementById('adsModalTitle').textContent = 'Sửa chi phí Ads';
+                document.getElementById('aDate').value = a.date;
+                document.getElementById('aAmount').value = a.amount;
+                document.getElementById('aNote').value = a.note || '';
+            } else {
+                document.getElementById('adsModalTitle').textContent = 'Thêm chi phí Ads';
+                document.getElementById('aDate').value = defaultDate || todayISO();
+                document.getElementById('aAmount').value = '';
+                document.getElementById('aNote').value = '';
+            }
+            updateAdsPreview();
+            document.getElementById('adsModal').classList.add('open');
+        }
+        function closeAdsModal() { document.getElementById('adsModal').classList.remove('open'); editingAdsId = null; }
+
+        function updateAdsPreview() {
+            const date = document.getElementById('aDate').value;
+            const amount = +document.getElementById('aAmount').value || 0;
+            if (!date || !amount) {
+                document.getElementById('aPreview').innerHTML = '💡 Nhập ngày và tiền Ads để xem phân bổ.';
+                return;
+            }
+            const cnt = DATA.orders.filter(o => o.date === date).length;
+            if (cnt === 0) {
+                document.getElementById('aPreview').innerHTML = `📊 Ngày ${date} chưa có đơn nào. Khi có đơn sẽ tự động phân bổ.`;
+                return;
+            }
+            const perOrder = amount / cnt;
+            document.getElementById('aPreview').innerHTML = `📊 Ngày ${date}: <strong>${cnt} đơn</strong> → mỗi đơn được phân bổ <strong>${fmt(perOrder)}</strong> tiền Ads.`;
+        }
+        ['aDate', 'aAmount'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateAdsPreview);
+        });
+
+        function saveAds() {
+            const date = document.getElementById('aDate').value;
+            const amount = +document.getElementById('aAmount').value || 0;
+            const note = document.getElementById('aNote').value.trim();
+            if (!date) { alert('Hãy chọn ngày'); return; }
+            if (!amount) { alert('Hãy nhập số tiền'); return; }
+            const entry = { id: editingAdsId || uid(), date, amount, note };
+            if (!DATA.adsDaily) DATA.adsDaily = [];
+            if (editingAdsId) {
+                const idx = DATA.adsDaily.findIndex(x => x.id === editingAdsId);
+                DATA.adsDaily[idx] = entry;
+            } else {
+                DATA.adsDaily.push(entry);
+            }
+            save(); closeAdsModal(); renderAll();
+            toast(editingAdsId ? '✅ Đã cập nhật' : '✅ Đã thêm chi phí Ads');
+            editingAdsId = null;
+        }
+
+        function deleteAds(id) {
+            if (!confirm('Xoá entry Ads này?')) return;
+            DATA.adsDaily = (DATA.adsDaily || []).filter(x => x.id !== id);
+            save(); renderAll(); toast('🗑️ Đã xoá');
+        }
+
+        function renderAds() {
+            const adsArr = (DATA.adsDaily || []).slice().sort((a, b) => b.date.localeCompare(a.date));
+
+            // KPI
+            const today = todayISO();
+            const cur = new Date(); const yyyy = cur.getFullYear(), mm = String(cur.getMonth() + 1).padStart(2, '0');
+            const monthPrefix = `${yyyy}-${mm}`;
+            const last7Cutoff = (() => { const d = new Date(); d.setDate(d.getDate() - 6); return d.toISOString().slice(0, 10); })();
+
+            const sumWhere = fn => adsArr.filter(fn).reduce((s, a) => s + (+a.amount || 0), 0);
+            const todayTotal = sumWhere(a => a.date === today);
+            const weekTotal = sumWhere(a => a.date >= last7Cutoff);
+            const monthTotal = sumWhere(a => a.date.startsWith(monthPrefix));
+            const allTotal = sumWhere(_ => true);
+
+            const kpi = (label, val, sub) =>
+                `<div class="kpi info">
+                    <div class="kpi-label">${label}</div>
+                    <div class="kpi-value">${fmt(val)}</div>
+                    ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
+                </div>`;
+            document.getElementById('adsKpi').innerHTML = [
+                kpi('Hôm nay', todayTotal, today),
+                kpi('7 ngày', weekTotal, ''),
+                kpi('Tháng này', monthTotal, monthPrefix),
+                kpi('Tất cả', allTotal, `${adsArr.length} ngày`)
+            ].join('');
+
+            const tbody = document.querySelector('#adsTable tbody');
+            tbody.innerHTML = adsArr.length ? adsArr.map(a => {
+                const cnt = DATA.orders.filter(o => o.date === a.date).length;
+                const perOrder = cnt ? a.amount / cnt : 0;
+                return `<tr>
+                    <td><strong>${a.date}</strong></td>
+                    <td class="num">${fmt(a.amount)}</td>
+                    <td class="num">${cnt}</td>
+                    <td class="num">${cnt ? fmt(perOrder) : '<span style="color:#aaa">-</span>'}</td>
+                    <td>${a.note || ''}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="btn btn-sm btn-ghost" onclick="openAdsModal('${a.id}')">✏️</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteAds('${a.id}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('')
+                : `<tr><td colspan="6" class="empty-state"><div class="ic">📺</div>Chưa có chi phí Ads<br><button class="btn btn-primary" style="margin-top:12px" onclick="openAdsModal()">＋ Thêm chi phí ngày đầu</button></td></tr>`;
+        }
+
         // =================== MAIN ===================
-        function renderAll() { renderDashboard(); renderOrders(); renderProducts(); renderInventory(); }
+        function renderAll() { renderDashboard(); renderOrders(); renderProducts(); renderInventory(); renderAds(); }
 
         // Chỉ khởi tạo khi đã xác thực (auth guard ở trên gọi __initAdmin)
         let __adminInitialized = false;
