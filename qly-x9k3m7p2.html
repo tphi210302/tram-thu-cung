@@ -1494,16 +1494,30 @@
             document.getElementById('stockAlerts').innerHTML = alertsHtml;
 
             const orders = getRangeOrders();
-            let revenue = 0, cost = 0, ads = 0, shipLoss = 0, profit = 0;
+            let revenue = 0, cost = 0, shipLoss = 0;
             let cntDelivered = 0, cntReturned = 0, cntPromo = 0, totalQty = 0;
             orders.forEach(o => {
                 const p = profitOf(o);
-                revenue += p.revenue; cost += p.cost; ads += p.ads; shipLoss += p.ship; profit += p.profit;
+                revenue += p.revenue; cost += p.cost; shipLoss += p.ship;
                 if (o.status === 'delivered') cntDelivered++;
                 else if (o.status === 'returned') cntReturned++;
                 else if (o.status === 'promo') cntPromo++;
                 totalQty += +o.qty || 0;
             });
+
+            // Tổng Ads = sum của adsDaily trong range (KHÔNG dùng phần phân bổ trên đơn)
+            const range = document.getElementById('dashRange').value;
+            let cutoffStr = null;
+            if (range !== 'all') {
+                const days = +range;
+                const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days + 1);
+                cutoffStr = cutoff.toISOString().slice(0, 10);
+            }
+            const ads = (DATA.adsDaily || [])
+                .filter(a => !cutoffStr || a.date >= cutoffStr)
+                .reduce((s, a) => s + (+a.amount || 0), 0);
+
+            const profit = revenue - cost - shipLoss - ads;
             const total = orders.length;
             const returnRate = total ? (cntReturned / total * 100) : 0;
             const avgProfit = total ? profit / total : 0;
@@ -1580,8 +1594,17 @@
             for (let i = days - 1; i >= 0; i--) {
                 const d = new Date(); d.setDate(d.getDate() - i);
                 const ds = d.toISOString().slice(0, 10);
-                let dayProfit = 0;
-                DATA.orders.forEach(o => { if (o.date === ds) dayProfit += profitOf(o).profit; });
+                let dayRev = 0, dayCost = 0, dayShip = 0;
+                DATA.orders.forEach(o => {
+                    if (o.date === ds) {
+                        const p = profitOf(o);
+                        dayRev += p.revenue; dayCost += p.cost; dayShip += p.ship;
+                    }
+                });
+                const dayAds = (DATA.adsDaily || [])
+                    .filter(a => a.date === ds)
+                    .reduce((s, a) => s + (+a.amount || 0), 0);
+                const dayProfit = dayRev - dayCost - dayShip - dayAds;
                 arr.push({ ds, label: d.getDate() + '/' + (d.getMonth() + 1), profit: dayProfit });
             }
             const maxAbs = Math.max(1, ...arr.map(x => Math.abs(x.profit)));
