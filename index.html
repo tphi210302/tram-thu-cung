@@ -1316,6 +1316,72 @@
             font-family: 'Nunito', sans-serif;
         }
 
+        /* COUNTDOWN BANNER TRONG POPUP ĐẶT HÀNG */
+        .order-flash-bar {
+            background:
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, .2), transparent 55%),
+                linear-gradient(95deg, #ff2d55, #ff6b35);
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 18px rgba(255, 45, 85, .35);
+            animation: ofbPulse 1.4s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes ofbPulse {
+            0%, 100% { box-shadow: 0 6px 18px rgba(255, 45, 85, .35); }
+            50% { box-shadow: 0 8px 28px rgba(255, 45, 85, .65); }
+        }
+
+        .ofb-pulse {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #fff176;
+            box-shadow: 0 0 0 0 rgba(255, 241, 118, .9);
+            animation: ofbDotPulse 1s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes ofbDotPulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 241, 118, .9); }
+            70% { box-shadow: 0 0 0 12px rgba(255, 241, 118, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 241, 118, 0); }
+        }
+
+        .ofb-text { flex: 1; min-width: 0; color: #fff; }
+        .ofb-title { font-size: .85rem; font-weight: 800; line-height: 1.2; letter-spacing: .2px; }
+        .ofb-sub { font-size: .68rem; opacity: .92; margin-top: 2px; line-height: 1.3; }
+
+        .ofb-time {
+            text-align: center; color: #fff;
+            background: rgba(0, 0, 0, .28);
+            border-radius: 10px;
+            padding: 5px 9px;
+            min-width: 68px;
+            flex-shrink: 0;
+        }
+        .ofb-time-label { font-size: .55rem; font-weight: 700; opacity: .85; letter-spacing: .8px; text-transform: uppercase; }
+        .ofb-time-num {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.25rem; font-weight: 800; line-height: 1.05;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .order-flash-bar.expired {
+            background: #eee;
+            color: #888;
+            box-shadow: none;
+            animation: none;
+        }
+        .order-flash-bar.expired .ofb-pulse { display: none; }
+        .order-flash-bar.expired .ofb-text,
+        .order-flash-bar.expired .ofb-time { color: #888; }
+        .order-flash-bar.expired .ofb-time { background: rgba(0, 0, 0, .08); }
+
         .success-msg {
             display: none;
             text-align: center;
@@ -1733,7 +1799,7 @@
                 <div class="flash-sale-right">
                     <div class="flash-ends-label">Kết thúc sau</div>
                     <div class="flash-countdown">
-                        <div class="cd-block"><span class="cd-num" id="cdMin">15</span></div>
+                        <div class="cd-block"><span class="cd-num" id="cdMin">25</span></div>
                         <span class="cd-sep">:</span>
                         <div class="cd-block"><span class="cd-num" id="cdSec">00</span></div>
                     </div>
@@ -2045,6 +2111,17 @@
     <div class="order-drawer" id="orderDrawer">
         <div class="drawer-title">📦 Thông tin đặt hàng<button class="close-btn" onclick="closeOrder()">✕</button></div>
         <div id="orderForm">
+            <div class="order-flash-bar" id="orderFlashBar">
+                <div class="ofb-pulse"></div>
+                <div class="ofb-text">
+                    <div class="ofb-title">⚡ Ưu đãi Flash Sale của bạn</div>
+                    <div class="ofb-sub">Hoàn tất đặt hàng trước khi hết giờ để giữ giá <strong>−43%</strong>!</div>
+                </div>
+                <div class="ofb-time">
+                    <div class="ofb-time-label">Còn lại</div>
+                    <div class="ofb-time-num"><span id="ofbMin">25</span>:<span id="ofbSec">00</span></div>
+                </div>
+            </div>
             <div class="order-summary" id="orderSummary"></div>
             <div class="form-group">
                 <label>👤 Họ và tên *</label>
@@ -2295,14 +2372,33 @@
             setTimeout(() => { window.location.href = 'https://eactshop.github.io/banh-ca-thanh-cong/'; }, 1200);
         }
 
-        // Flash Sale countdown
+        // Flash Sale countdown — đồng hồ duy nhất chạy chung cho banner trang chính
+        // và banner trong popup đặt hàng. Vẫn chạy khi popup mở để tạo áp lực mua hàng.
         (function () {
-            let remaining = 15 * 60;
-            const minEl = document.getElementById('cdMin'), secEl = document.getElementById('cdSec'), banner = document.getElementById('flashSaleBanner');
+            let remaining = 25 * 60; // 25 phút
+            const minEl = document.getElementById('cdMin'),
+                  secEl = document.getElementById('cdSec'),
+                  ofbMinEl = document.getElementById('ofbMin'),
+                  ofbSecEl = document.getElementById('ofbSec'),
+                  ofbBar = document.getElementById('orderFlashBar'),
+                  banner = document.getElementById('flashSaleBanner');
             function tick() {
-                if (remaining <= 0) { banner.innerHTML = '<div class="flash-expired">⏰ Flash Sale đã kết thúc</div>'; banner.style.cssText = 'background:none;box-shadow:none;animation:none;padding:0'; return; }
-                minEl.textContent = String(Math.floor(remaining / 60)).padStart(2, '0');
-                secEl.textContent = String(remaining % 60).padStart(2, '0');
+                if (remaining <= 0) {
+                    banner.innerHTML = '<div class="flash-expired">⏰ Flash Sale đã kết thúc</div>';
+                    banner.style.cssText = 'background:none;box-shadow:none;animation:none;padding:0';
+                    if (ofbBar) {
+                        ofbBar.classList.add('expired');
+                        ofbBar.querySelector('.ofb-title').textContent = '⏰ Flash Sale đã kết thúc';
+                        ofbBar.querySelector('.ofb-sub').textContent = 'Bạn vẫn có thể đặt hàng nhưng giá sẽ trở về niêm yết.';
+                        ofbMinEl.textContent = '00'; ofbSecEl.textContent = '00';
+                    }
+                    return;
+                }
+                const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+                const ss = String(remaining % 60).padStart(2, '0');
+                minEl.textContent = mm; secEl.textContent = ss;
+                if (ofbMinEl) ofbMinEl.textContent = mm;
+                if (ofbSecEl) ofbSecEl.textContent = ss;
                 if (remaining <= 60) document.querySelectorAll('.cd-block').forEach(b => b.style.background = 'rgba(255,255,255,.35)');
                 remaining--;
             }
