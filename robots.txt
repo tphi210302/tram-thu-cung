@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /qly-x9k3m7p2.html
+Disallow: /admin.html
