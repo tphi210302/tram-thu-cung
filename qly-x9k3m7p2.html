@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý — Trạm Thú Cưng</title>
+    <title>🔒 Đăng nhập — Trạm Thú Cưng</title>
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="googlebot" content="noindex, nofollow">
     <link rel="icon" type="image/svg+xml" href="./favicon.svg">
@@ -318,10 +318,153 @@
             transition: opacity .3s, transform .3s;
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* LOGIN GATE */
+        #loginGate {
+            position: fixed; inset: 0; z-index: 9999;
+            background:
+                radial-gradient(800px 500px at 30% 20%, rgba(255, 45, 85, .25), transparent 55%),
+                radial-gradient(700px 500px at 80% 80%, rgba(255, 109, 0, .2), transparent 60%),
+                linear-gradient(180deg, #1f1b2e 0%, #15131f 100%);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        #appRoot { display: none; }
+        body.authed #loginGate { display: none; }
+        body.authed #appRoot { display: block; }
+
+        .login-box {
+            background: rgba(255, 255, 255, .04);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 22px;
+            padding: 32px 26px 26px;
+            width: 100%; max-width: 380px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
+            text-align: center;
+            color: #fff;
+        }
+
+        .login-logo {
+            width: 64px; height: 64px; border-radius: 18px;
+            background: var(--primary-grad);
+            margin: 0 auto 14px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 12px 28px rgba(255, 45, 85, .45);
+            position: relative;
+        }
+        .login-logo::after {
+            content: ''; position: absolute; inset: 4px;
+            border-radius: 14px; border: 1.5px solid rgba(255, 255, 255, .35);
+        }
+
+        .login-title {
+            font-family: 'Baloo 2'; font-size: 1.35rem; font-weight: 800;
+            background: var(--primary-grad);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .login-sub { font-size: .8rem; color: #aaa; margin-top: 4px; margin-bottom: 22px; }
+
+        .login-input-wrap {
+            position: relative; margin-bottom: 14px;
+        }
+        .login-input {
+            width: 100%; padding: 13px 44px 13px 16px;
+            background: rgba(255, 255, 255, .06);
+            border: 1.5px solid rgba(255, 255, 255, .12);
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Nunito'; font-size: 1rem;
+            outline: none; transition: border-color .2s, background .2s;
+        }
+        .login-input::placeholder { color: rgba(255, 255, 255, .35); }
+        .login-input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, .09);
+        }
+        .login-eye {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: #aaa; cursor: pointer;
+            font-size: 1.1rem; padding: 4px;
+        }
+
+        .login-btn {
+            width: 100%; padding: 13px;
+            background: var(--primary-grad);
+            color: #fff; border: none; border-radius: 12px;
+            font-family: 'Nunito'; font-size: 1rem; font-weight: 800;
+            cursor: pointer; box-shadow: 0 8px 22px rgba(255, 45, 85, .45);
+            transition: transform .15s, box-shadow .15s;
+        }
+        .login-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(255, 45, 85, .6); }
+        .login-btn:active { transform: translateY(0); }
+
+        .login-error {
+            color: #ff8a9a; font-size: .82rem; font-weight: 700;
+            margin-top: 10px; min-height: 18px;
+            animation: shake .3s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .login-remember {
+            display: flex; align-items: center; gap: 6px;
+            color: #aaa; font-size: .78rem; font-weight: 700;
+            margin-bottom: 14px; cursor: pointer; user-select: none;
+        }
+        .login-remember input { accent-color: var(--primary); }
+
+        .login-foot { font-size: .68rem; color: #666; margin-top: 18px; line-height: 1.5; }
+
+        .logout-btn {
+            background: rgba(255, 45, 85, .1) !important;
+            color: var(--danger) !important;
+            border: 1px solid rgba(255, 45, 85, .25) !important;
+        }
     </style>
 </head>
 
 <body>
+    <!-- LOGIN GATE -->
+    <div id="loginGate">
+        <div class="login-box">
+            <div class="login-logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <circle cx="5.5" cy="9" r="2.2" />
+                    <circle cx="9.5" cy="5" r="2" />
+                    <circle cx="14.5" cy="5" r="2" />
+                    <circle cx="18.5" cy="9" r="2.2" />
+                    <path d="M12 10c-3.2 0-5.5 2.6-5.5 5.2 0 1.7 1.3 2.8 3 2.8 1 0 1.6-.4 2.5-.4s1.5.4 2.5.4c1.7 0 3-1.1 3-2.8C17.5 12.6 15.2 10 12 10z" />
+                </svg>
+            </div>
+            <div class="login-title">Trạm Thú Cưng</div>
+            <div class="login-sub">Khu vực quản lý nội bộ</div>
+
+            <form id="loginForm" autocomplete="off">
+                <div class="login-input-wrap">
+                    <input type="password" id="loginPassword" class="login-input" placeholder="Mật khẩu" autocomplete="current-password">
+                    <button type="button" class="login-eye" id="togglePass" tabindex="-1" title="Hiện/ẩn">👁️</button>
+                </div>
+                <label class="login-remember">
+                    <input type="checkbox" id="loginRemember" checked>
+                    Ghi nhớ trên thiết bị này
+                </label>
+                <button type="submit" class="login-btn">🔓 Mở khoá</button>
+                <div class="login-error" id="loginError"></div>
+            </form>
+
+            <div class="login-foot">
+                🔒 Mật khẩu được mã hoá SHA-256.<br>
+                Nội dung admin chỉ tải sau khi xác thực thành công.
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN APP (chỉ hiện sau khi đăng nhập đúng) -->
+    <div id="appRoot">
     <div class="topbar">
         <div class="logo-mark">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
@@ -566,6 +709,14 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-title">Phiên đăng nhập</div>
+                <div class="info-box" style="margin-bottom:10px">
+                    Đăng xuất sẽ xoá phiên trên thiết bị này — lần sau vào sẽ phải nhập lại mật khẩu.
+                </div>
+                <button class="btn logout-btn" onclick="logoutAdmin()">🔒 Đăng xuất khỏi thiết bị này</button>
+            </div>
         </div>
     </div>
 
@@ -735,6 +886,83 @@
     </div>
 
     <div class="toast" id="toast"></div>
+    </div><!-- end #appRoot -->
+
+    <!-- AUTH GUARD: chạy trước, chặn nội dung admin -->
+    <script>
+    (function () {
+        const PASS_HASH = '2e878983f010a241f9668c1398f7046a6f3f24db939c95885bfd8b728be5a412';
+        const AUTH_KEY = 'tramThuCung_auth_v1';
+
+        async function sha256(str) {
+            const buf = new TextEncoder().encode(str);
+            const hash = await crypto.subtle.digest('SHA-256', buf);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function unlock() {
+            document.body.classList.add('authed');
+            document.title = 'Quản lý — Trạm Thú Cưng';
+            // Trigger app init nếu hàm tồn tại
+            if (typeof window.__initAdmin === 'function') window.__initAdmin();
+        }
+
+        function lock() {
+            try { localStorage.removeItem(AUTH_KEY); } catch (e) {}
+            location.reload();
+        }
+        window.logoutAdmin = lock;
+
+        // Nếu đã đăng nhập (token khớp hash) → mở luôn
+        try {
+            if (localStorage.getItem(AUTH_KEY) === PASS_HASH) {
+                document.body.classList.add('authed');
+            }
+        } catch (e) {}
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.body.classList.contains('authed')) {
+                document.title = 'Quản lý — Trạm Thú Cưng';
+                if (typeof window.__initAdmin === 'function') window.__initAdmin();
+                return;
+            }
+
+            const form = document.getElementById('loginForm');
+            const input = document.getElementById('loginPassword');
+            const errEl = document.getElementById('loginError');
+            const remember = document.getElementById('loginRemember');
+            const toggle = document.getElementById('togglePass');
+
+            input.focus();
+
+            toggle.addEventListener('click', () => {
+                input.type = input.type === 'password' ? 'text' : 'password';
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errEl.textContent = '';
+                const val = input.value;
+                if (!val) { errEl.textContent = '⚠️ Hãy nhập mật khẩu'; return; }
+                const hash = await sha256(val);
+                if (hash === PASS_HASH) {
+                    if (remember.checked) {
+                        try { localStorage.setItem(AUTH_KEY, PASS_HASH); } catch (e) {}
+                    }
+                    unlock();
+                } else {
+                    errEl.textContent = '❌ Mật khẩu không đúng';
+                    input.value = '';
+                    input.focus();
+                    // small delay then re-trigger shake
+                    errEl.style.animation = 'none';
+                    void errEl.offsetWidth;
+                    errEl.style.animation = '';
+                }
+            });
+        });
+    })();
+    </script>
 
     <script>
         // =================== STORAGE ===================
@@ -1615,9 +1843,17 @@
         // =================== MAIN ===================
         function renderAll() { renderDashboard(); renderOrders(); renderProducts(); renderInventory(); }
 
-        loadSettings();
-        bindSettings();
-        renderAll();
+        // Chỉ khởi tạo khi đã xác thực (auth guard ở trên gọi __initAdmin)
+        let __adminInitialized = false;
+        window.__initAdmin = function () {
+            if (__adminInitialized) return;
+            __adminInitialized = true;
+            loadSettings();
+            bindSettings();
+            renderAll();
+        };
+        // Nếu trang load thẳng vào do đã có session → init ngay
+        if (document.body.classList.contains('authed')) window.__initAdmin();
     </script>
 </body>
 
