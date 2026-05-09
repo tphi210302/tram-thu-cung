@@ -1190,15 +1190,15 @@
         let syncTimer = null;
 
         function parseDate(d) {
-            if (!d) return new Date().toISOString().slice(0, 10);
+            if (!d) return todayISO();
             try {
-                if (d instanceof Date) return d.toISOString().slice(0, 10);
+                if (d instanceof Date) return dateStr(d);
                 const iso = new Date(d);
-                if (!isNaN(iso.getTime())) return iso.toISOString().slice(0, 10);
+                if (!isNaN(iso.getTime())) return dateStr(iso);
                 const m = String(d).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
                 if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
             } catch (e) {}
-            return new Date().toISOString().slice(0, 10);
+            return todayISO();
         }
 
         function inferProductFromSanPham(sanPham) {
@@ -1353,7 +1353,9 @@
             if (Math.abs(a) >= 1000) return (a / 1000).toFixed(0) + 'k';
             return String(a);
         };
-        const todayISO = () => new Date().toISOString().slice(0, 10);
+        // Trả về 'YYYY-MM-DD' theo LOCAL timezone (tránh bug UTC vs VN)
+        const dateStr = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const todayISO = () => dateStr(new Date());
         const uid = () => Math.random().toString(36).slice(2, 10);
 
         // ===== Inventory & BOM helpers =====
@@ -1480,7 +1482,7 @@
             if (range === 'all') return DATA.orders;
             const days = +range;
             const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days + 1);
-            const cutoffStr = cutoff.toISOString().slice(0, 10);
+            const cutoffStr = dateStr(cutoff);
             return DATA.orders.filter(o => o.date >= cutoffStr);
         }
 
@@ -1522,7 +1524,7 @@
             if (range !== 'all') {
                 const days = +range;
                 const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days + 1);
-                cutoffStr = cutoff.toISOString().slice(0, 10);
+                cutoffStr = dateStr(cutoff);
             }
             const ads = (DATA.adsDaily || [])
                 .filter(a => !cutoffStr || a.date >= cutoffStr)
@@ -1604,7 +1606,7 @@
             const arr = [];
             for (let i = days - 1; i >= 0; i--) {
                 const d = new Date(); d.setDate(d.getDate() - i);
-                const ds = d.toISOString().slice(0, 10);
+                const ds = dateStr(d);
                 let dayRev = 0, dayCost = 0, dayShip = 0;
                 DATA.orders.forEach(o => {
                     if (o.date === ds) {
@@ -1723,7 +1725,29 @@
                 status: document.getElementById('oStatus').value,
                 productId: pid
             };
-            const r = profitOf(o);
+
+            // Tính ads phân bổ DỰ KIẾN (giả lập đơn này được thêm vào → +1 vào count)
+            const dailyTotal = getDailyAdsTotal(date);
+            const existingCount = DATA.orders.filter(x =>
+                x.date === date && (editingOrderId ? x.id !== editingOrderId : true)
+            ).length;
+            const projectedCount = existingCount + 1;
+            const projectedAds = dailyTotal > 0 ? dailyTotal / projectedCount : 0;
+
+            // Tính profit thủ công với projectedAds
+            const sp = +o.sellPrice || 0, c = +o.cost || 0, q = +o.qty || 1;
+            const shopShip = +DATA.settings.shipShop || 0;
+            let r = { revenue: 0, cost: 0, ads: projectedAds, ship: 0, profit: 0 };
+            if (o.status === 'delivered') {
+                r.revenue = sp * q; r.cost = c * q; r.ship = 0;
+                r.profit = r.revenue - r.cost - projectedAds;
+            } else if (o.status === 'returned') {
+                r.revenue = 0; r.cost = 0; r.ship = shopShip;
+                r.profit = -projectedAds - shopShip;
+            } else if (o.status === 'promo') {
+                r.revenue = sp * q; r.cost = c * q; r.ship = shopShip;
+                r.profit = r.revenue - r.cost - projectedAds - shopShip;
+            }
 
             let stockInfo = '';
             if (prod && prod.bom && prod.bom.length) {
@@ -1752,11 +1776,10 @@
                 stockInfo = `<br>⚠️ Sản phẩm chưa có BOM, không tính tồn kho.`;
             }
 
-            // Cảnh báo nếu ngày này chưa có ads (sẽ tính = 0)
-            const dailyTotal = getDailyAdsTotal(date);
+            // Cảnh báo nếu ngày này chưa có ads
             const adsHint = dailyTotal === 0
                 ? '<br><span style="color:var(--warn);font-size:.78rem">⚠️ Chưa nhập Ads cho ngày này — vào tab 📺 Quảng cáo để thêm.</span>'
-                : `<br><span style="font-size:.78rem;color:var(--gray)">📺 Ads ngày ${date}: ${fmt(dailyTotal)} (đã phân bổ ${fmt(r.ads)} cho đơn này)</span>`;
+                : `<br><span style="font-size:.78rem;color:var(--gray)">📺 Ads ngày ${date}: ${fmt(dailyTotal)} chia cho ${projectedCount} đơn → mỗi đơn <strong>${fmt(projectedAds)}</strong></span>`;
 
             document.getElementById('oPreview').innerHTML =
                 `<strong>📊 Xem trước:</strong><br>
@@ -1911,7 +1934,7 @@
 
         function setQuickRange(kind) {
             const today = new Date();
-            const fmtD = d => d.toISOString().slice(0, 10);
+            const fmtD = d => dateStr(d);
             const fromEl = document.getElementById('orderFilterFrom');
             const toEl = document.getElementById('orderFilterTo');
             if (kind === 'all') { fromEl.value = ''; toEl.value = ''; }
@@ -2331,7 +2354,7 @@
             const today = todayISO();
             const cur = new Date(); const yyyy = cur.getFullYear(), mm = String(cur.getMonth() + 1).padStart(2, '0');
             const monthPrefix = `${yyyy}-${mm}`;
-            const last7Cutoff = (() => { const d = new Date(); d.setDate(d.getDate() - 6); return d.toISOString().slice(0, 10); })();
+            const last7Cutoff = (() => { const d = new Date(); d.setDate(d.getDate() - 6); return dateStr(d); })();
 
             const sumWhere = fn => adsArr.filter(fn).reduce((s, a) => s + (+a.amount || 0), 0);
             const todayTotal = sumWhere(a => a.date === today);
