@@ -554,6 +554,10 @@
                 </div>
                 <div class="toolbar">
                     <button class="btn btn-primary" onclick="openOrderModal()">＋ Thêm đơn</button>
+                    <input type="text" class="filter-input" id="orderFilterSearch" placeholder="🔍 Tên / SĐT / Mã đơn / Địa chỉ" style="min-width:220px;flex:1">
+                    <input type="date" class="filter-input" id="orderFilterFrom" title="Từ ngày">
+                    <span style="color:#999;align-self:center">→</span>
+                    <input type="date" class="filter-input" id="orderFilterTo" title="Đến ngày">
                     <select class="filter-input" id="orderFilterStatus">
                         <option value="">Tất cả trạng thái</option>
                         <option value="delivered">Đã giao</option>
@@ -563,8 +567,15 @@
                     <select class="filter-input" id="orderFilterProduct">
                         <option value="">Tất cả sản phẩm</option>
                     </select>
-                    <input type="month" class="filter-input" id="orderFilterMonth">
-                    <div class="grow"></div>
+                    <button class="btn btn-ghost btn-sm" onclick="clearOrderFilters()" title="Bỏ tất cả filter">✕ Xoá lọc</button>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+                    <button class="btn btn-ghost btn-sm" onclick="setQuickRange('today')">Hôm nay</button>
+                    <button class="btn btn-ghost btn-sm" onclick="setQuickRange('7')">7 ngày</button>
+                    <button class="btn btn-ghost btn-sm" onclick="setQuickRange('30')">30 ngày</button>
+                    <button class="btn btn-ghost btn-sm" onclick="setQuickRange('month')">Tháng này</button>
+                    <button class="btn btn-ghost btn-sm" onclick="setQuickRange('all')">Tất cả</button>
+                    <div id="orderFilterStats" style="margin-left:auto;font-size:.82rem;color:#444"></div>
                 </div>
                 <div class="table-wrap">
                     <table id="orderTable">
@@ -1816,12 +1827,22 @@
         function renderOrders() {
             const stat = document.getElementById('orderFilterStatus').value;
             const pid = document.getElementById('orderFilterProduct').value;
-            const month = document.getElementById('orderFilterMonth').value;
-            const filtered = DATA.orders.filter(o =>
-                (!stat || o.status === stat) &&
-                (!pid || o.productId === pid) &&
-                (!month || o.date.startsWith(month))
-            );
+            const from = document.getElementById('orderFilterFrom').value;
+            const to = document.getElementById('orderFilterTo').value;
+            const search = (document.getElementById('orderFilterSearch').value || '').trim().toLowerCase();
+
+            const filtered = DATA.orders.filter(o => {
+                if (stat && o.status !== stat) return false;
+                if (pid && o.productId !== pid) return false;
+                if (from && o.date < from) return false;
+                if (to && o.date > to) return false;
+                if (search) {
+                    const hay = [o.customer, o.note, o.maDon, o.id]
+                        .filter(Boolean).join(' ').toLowerCase();
+                    if (!hay.includes(search)) return false;
+                }
+                return true;
+            });
             const sortedAll = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
 
             // Populate product filter
@@ -1831,13 +1852,38 @@
                 DATA.products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
             prodSel.value = cur;
 
+            // Sub-stats: hiện tổng cho danh sách đã filter
+            let fRev = 0, fProfit = 0;
+            sortedAll.forEach(o => { const p = profitOf(o); fRev += p.revenue; fProfit += p.profit; });
+            document.getElementById('orderFilterStats').innerHTML = sortedAll.length
+                ? `📋 <strong>${sortedAll.length}</strong> đơn · DT <strong>${fmt(fRev)}</strong> · LN <strong style="color:${fProfit >= 0 ? 'var(--accent)' : 'var(--danger)'}">${fmt(fProfit)}</strong>`
+                : '';
+
             const tbody = document.querySelector('#orderTable tbody');
             tbody.innerHTML = sortedAll.length ? sortedAll.map(o => {
                 const p = profitOf(o);
                 const prod = DATA.products.find(x => x.id === o.productId);
+                // Tách SĐT khỏi customer string nếu có (định dạng "Tên · SĐT")
+                let custName = o.customer || '';
+                let custPhone = '';
+                const phoneMatch = custName.match(/(\d{9,11})/);
+                if (phoneMatch) custPhone = phoneMatch[1];
+
+                const customerHtml = o.customer
+                    ? `<div style="font-size:.78rem;color:#222;margin-top:4px;font-weight:700">👤 ${o.customer}${custPhone ? ` <a href="tel:${custPhone}" style="color:var(--accent);text-decoration:none;margin-left:4px" title="Gọi">📞</a><a href="https://zalo.me/${custPhone}" target="_blank" style="color:var(--info);text-decoration:none;margin-left:2px" title="Zalo">💬</a>` : ''}</div>`
+                    : '';
+                const noteHtml = o.note ? `<div style="font-size:.7rem;color:#666;margin-top:2px;line-height:1.4">📍 ${o.note}</div>` : '';
+                const maDonHtml = o.maDon
+                    ? `<span style="font-size:.65rem;color:var(--primary);font-weight:800;background:#fff0f3;padding:1px 6px;border-radius:6px;margin-left:6px;letter-spacing:.3px">${o.maDon}</span>`
+                    : '';
+
                 return `<tr>
-                    <td>${o.date}</td>
-                    <td>${prod ? prod.name : '(đã xoá)'}${o.customer ? `<div style="font-size:.7rem;color:#888">${o.customer}</div>` : ''}</td>
+                    <td style="white-space:nowrap;font-size:.8rem">${o.date}</td>
+                    <td>
+                        <strong>${prod ? prod.name : '(đã xoá)'}</strong>${maDonHtml}
+                        ${customerHtml}
+                        ${noteHtml}
+                    </td>
                     <td class="num">${o.qty}</td>
                     <td class="num">${fmt(p.revenue)}</td>
                     <td class="num">${fmt(p.cost)}</td>
@@ -1853,11 +1899,32 @@
                     </td>
                 </tr>`;
             }).join('')
-                : `<tr><td colspan="10" class="empty-state"><div class="ic">🧾</div>Chưa có đơn hàng nào<br><button class="btn btn-primary" style="margin-top:12px" onclick="openOrderModal()">＋ Thêm đơn đầu tiên</button></td></tr>`;
+                : `<tr><td colspan="10" class="empty-state"><div class="ic">🧾</div>Không có đơn hàng phù hợp filter<br><button class="btn btn-primary" style="margin-top:12px" onclick="openOrderModal()">＋ Thêm đơn</button></td></tr>`;
         }
 
-        ['orderFilterStatus', 'orderFilterProduct', 'orderFilterMonth'].forEach(id =>
+        function clearOrderFilters() {
+            ['orderFilterStatus', 'orderFilterProduct', 'orderFilterFrom', 'orderFilterTo', 'orderFilterSearch'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            renderOrders();
+        }
+
+        function setQuickRange(kind) {
+            const today = new Date();
+            const fmtD = d => d.toISOString().slice(0, 10);
+            const fromEl = document.getElementById('orderFilterFrom');
+            const toEl = document.getElementById('orderFilterTo');
+            if (kind === 'all') { fromEl.value = ''; toEl.value = ''; }
+            else if (kind === 'today') { fromEl.value = fmtD(today); toEl.value = fmtD(today); }
+            else if (kind === '7') { const d = new Date(); d.setDate(d.getDate() - 6); fromEl.value = fmtD(d); toEl.value = fmtD(today); }
+            else if (kind === '30') { const d = new Date(); d.setDate(d.getDate() - 29); fromEl.value = fmtD(d); toEl.value = fmtD(today); }
+            else if (kind === 'month') { const d = new Date(today.getFullYear(), today.getMonth(), 1); fromEl.value = fmtD(d); toEl.value = fmtD(today); }
+            renderOrders();
+        }
+
+        ['orderFilterStatus', 'orderFilterProduct', 'orderFilterFrom', 'orderFilterTo'].forEach(id =>
             document.getElementById(id).addEventListener('change', renderOrders));
+        document.getElementById('orderFilterSearch').addEventListener('input', renderOrders);
 
         // =================== PRODUCTS ===================
         let editingProductId = null;
